@@ -37,34 +37,37 @@
 
 <!-- ════════════════════════════════════════════════════════════════════
      THE DOOR — entrance overlay.
-       #door-img    the full hallway photo: a STATIC backdrop. During the
-                    walk-up it zooms toward the door; it never rotates.
-       #door-leaf   a copy of the photo clipped to JUST the door leaf,
-                    hinged on the leaf's own left edge. THIS is the only
-                    thing that swings — so the wall and frame, which live
-                    only on the static backdrop, can never rotate into view.
-                    The nameplate sits on the leaf, so it swings with it.
-     The walk-up zooms until the leaf fills the screen; then the leaf
-     swings the whole way open (turning edge-on and away) to reveal the
-     room behind. It never fades while opening. ═══════════════════════ -->
+
+     #door-zoom holds the full hallway photo and does the walk-up
+     (translate + scale) until ONLY the door leaf fills the screen.
+
+     #door-leaf is a separate top-level panel — NOT inside #door-zoom, so
+     no parent transform flattens its 3D. At the moment of opening, JS
+     positions it exactly over the on-screen leaf, hides #door-zoom, and
+     swings #door-leaf on its left edge. The perspective origin is pinned
+     to the nameplate, so the plate stays square to you as it opens.
+     ════════════════════════════════════════════════════════════════════ -->
 <div id="door-overlay" role="button" tabindex="0"
      aria-label="A wooden door with a brass nameplate reading Samareh Jack. Click to come in.">
+
   <div id="door-zoom">
     <div id="door-pos" class="drifting">
       <img id="door-img" src="assets/door.jpg" alt="" draggable="false">
-      <div id="door-leaf">
-        <img id="door-leaf-img" src="assets/door.jpg" alt="" draggable="false">
-        <div id="door-plate" aria-hidden="true">Samareh&nbsp;Jack</div>
-      </div>
+      <div id="door-plate" aria-hidden="true">Samareh&nbsp;Jack</div>
     </div>
   </div>
+
+  <!-- The swinging leaf. JS sets its position/size/background and the
+       plate placement, then adds .swing. -->
+  <div id="door-leaf" hidden>
+    <div id="door-leaf-plate" aria-hidden="true">Samareh&nbsp;Jack</div>
+  </div>
+
   <p id="door-hint">click to come in</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════
      EXAMINE CARD — opens when an object is clicked.
-     Title and text come from the object's config entry; the image is
-     optional and hides itself if the file doesn't exist yet.
      ════════════════════════════════════════════════════════════════════ -->
 <div class="modal-backdrop" id="examine-backdrop" hidden>
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="examine-title">
@@ -72,7 +75,6 @@
     <h2 id="examine-title"></h2>
     <p class="card-body" id="examine-text"></p>
     <div class="card-actions" id="examine-actions">
-      <!-- link buttons are injected before this button -->
       <button class="btn btn-quiet" id="examine-stay">Keep looking around</button>
     </div>
   </div>
@@ -85,15 +87,11 @@
   <div class="card" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
     <p class="eyebrow">Take a seat</p>
     <h2 id="welcome-title">Welcome. What brings you by?</h2>
-
     <div id="welcome-options" class="option-list"></div>
-
     <p class="card-body" id="welcome-response" hidden></p>
-
     <div class="card-actions" id="welcome-actions" hidden>
       <button class="btn btn-primary" id="welcome-done">Look around</button>
     </div>
-
     <p class="footnote">
       This room was drawn by AI.
       <a href="why-ai.html">Here's why I chose that.</a>

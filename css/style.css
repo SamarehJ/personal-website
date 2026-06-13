@@ -93,29 +93,41 @@ html, body {
 }
 
 /* [4] ─── THE DOOR ─────────────────────────────────────────────────────
-   #door-img is a STATIC backdrop (the hallway). #door-leaf is a copy
-   clipped to the door leaf, hinged on its left edge — the ONLY thing that
-   swings. Because the wall/frame exist only on the static backdrop, the
-   swing can never rotate them into view. Perspective is baked into the
-   leaf's own transform (perspective() function), so it turns straight
-   back regardless of the walk-up zoom on its ancestors. */
+   Two layers inside #door-overlay:
+
+     #door-zoom   the full hallway photo; JS walks it up (translate+scale)
+                  until only the door leaf fills the screen
+     #door-leaf   a separate panel, a DIRECT child of #door-overlay (not of
+                  #door-zoom). JS gives it the leaf's on-screen box and a
+                  background cropped to just the leaf, then swings it.
+
+   Why separate: a 2D transform on a parent (the zoom) flattens any 3D
+   inside it, which made the swing look like it tipped downward. Keeping
+   the swinging leaf at the top level — with perspective on #door-overlay
+   and the perspective ORIGIN pinned to the nameplate — makes it open like
+   a real door, with the plate staying square to you. */
 #door-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
   overflow: hidden;
+  perspective: 1600px;
+  perspective-origin: 50% 42%;       /* the nameplate's resting spot, so it
+                                        doesn't tilt as the leaf turns */
   background: var(--hallway);        /* covers the room until we open */
   cursor: pointer;
 }
 #door-overlay[hidden] { display: none; }
 #door-overlay:focus-visible { outline: none; }
 #door-overlay.opening { background: transparent; }   /* reveal the room */
+/* Once the leaf lifts out, the full-door layer is redundant — hide it
+   instantly (no fade); the leaf sits exactly over it, so nothing flickers. */
+#door-overlay.opening #door-zoom { visibility: hidden; }
 
 #door-zoom {
   position: absolute;
   inset: 0;
-  /* The pace of the walk-up (JS sets the transform, this paces it) */
-  transition: transform 1.5s cubic-bezier(0.5, 0.05, 0.7, 0.3);
+  transition: transform 1.5s cubic-bezier(0.5, 0.05, 0.7, 0.3);  /* walk-up pace */
 }
 
 #door-pos {
@@ -139,42 +151,34 @@ html, body {
   user-select: none;
   -webkit-user-drag: none;
 }
-/* The static backdrop is hidden the instant the leaf starts to swing.
-   It's fully behind the (closed) leaf at that moment and otherwise zoomed
-   off-screen, so this is invisible — it just stops the painted door from
-   showing through the doorway as the leaf opens. No transition = no fade. */
-#door-overlay.opening #door-img { opacity: 0; }
 
-/* The swinging leaf: JS sets left/top/width/height to the leaf region and
-   offsets #door-leaf-img so only the leaf shows through. */
+/* The swinging leaf. Position, size and background-image are all set by
+   JS at the moment of opening. It hinges on its own left edge and turns
+   past 90°, where backface-visibility hides it — so it swings fully out
+   of the way instead of fading. */
 #door-leaf {
   position: absolute;
   overflow: hidden;
-  transform-origin: 0% 50%;          /* hinge: leaf's own left edge */
-  backface-visibility: hidden;       /* turns invisible once past edge-on */
+  transform-origin: 0% 50%;          /* hinge: the leaf's left edge */
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  background-repeat: no-repeat;
+  will-change: transform;
 }
-#door-leaf-img {
-  position: absolute;                /* JS offsets it to reveal the leaf */
-  display: block;
-  user-select: none;
-  -webkit-user-drag: none;
+#door-leaf[hidden] { display: none; }
+#door-leaf.swing {
+  animation: leaf-open 1.25s cubic-bezier(0.4, 0.02, 0.45, 1) forwards;
 }
-/* Swing the whole way open: 0 → past edge-on. backface-visibility hides it
-   the moment it turns past 90°, so it leaves by swinging away, never by
-   fading. perspective() is in the transform so depth survives the zoom. */
-#door-overlay.opening #door-leaf {
-  animation: leaf-swing 1.3s cubic-bezier(0.45, 0.04, 0.55, 0.96) forwards;
-}
-@keyframes leaf-swing {
-  from { transform: perspective(1600px) rotateY(0deg); }
-  to   { transform: perspective(1600px) rotateY(115deg); }
+@keyframes leaf-open {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(105deg); }
 }
 
-/* The name is real text overlaid on the plate (sharp at any size,
-   survives image regeneration). Positioned by JS within the leaf.
-   Font size is set by JS as a fraction of the door's rendered width. */
-#door-plate {
+/* The name, overlaid as real text (sharp at any size, survives image
+   regeneration). JS places it within the leaf and sizes the font. */
+#door-plate, #door-leaf-plate {
   position: absolute;
+  transform: translate(-50%, -50%);
   text-align: center;
   font-family: var(--font-display);
   letter-spacing: 0.06em;
@@ -442,9 +446,9 @@ body.editing #look-around { display: none; }
   z-index: 5;
   pointer-events: none;
 }
-#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.3; }
-#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.35; }
-#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.08; }
+#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.12; }
+#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.12; }
+#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.04; }
 
 #editor-panel {
   position: fixed;
@@ -465,6 +469,13 @@ body.editing #look-around { display: none; }
   font-weight: 400;
   font-size: 1.15rem;
   color: var(--walnut);
+  user-select: none;
+}
+#editor-panel h3 .ed-grip {
+  float: right;
+  color: var(--brass);
+  opacity: 0.7;
+  letter-spacing: -0.1em;
 }
 #editor-panel p { margin: 0 0 0.6rem; line-height: 1.4; }
 #editor-panel .row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
@@ -495,8 +506,7 @@ body.editing #look-around { display: none; }
   #door-pos.drifting { animation: none; }
   #door-hint { animation: none; opacity: 0.8; }
   #door-zoom { transition: none; }
-  #door-overlay.opening #door-leaf { animation: door-fade-only 0.6s ease forwards; }
-  #door-overlay.opening #door-img { opacity: 0; }
+  #door-leaf.swing { animation: door-fade-only 0.5s ease forwards; }
   #room.stepping { transition: none; }
   .glow-wrap.beckon { animation: none; opacity: 0.7; }
   .glow-wrap.reveal { animation: none; }

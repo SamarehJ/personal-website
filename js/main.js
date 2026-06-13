@@ -37,9 +37,10 @@
   var doorOverlay = document.getElementById("door-overlay");
   var doorZoom = document.getElementById("door-zoom");
   var doorPos = document.getElementById("door-pos");
+  var doorImg = document.getElementById("door-img");           /* the hallway photo */
   var doorLeaf = document.getElementById("door-leaf");
-  var doorLeafImg = document.getElementById("door-leaf-img");
-  var doorPlate = document.getElementById("door-plate");
+  var doorPlate = document.getElementById("door-plate");        /* rides the zoom */
+  var doorLeafPlate = document.getElementById("door-leaf-plate"); /* on the swing */
 
   var examineBackdrop = document.getElementById("examine-backdrop");
   var examineImage = document.getElementById("examine-image");
@@ -55,24 +56,17 @@
   var welcomeActions = document.getElementById("welcome-actions");
   var welcomeDone = document.getElementById("welcome-done");
 
-  /* Session storage: remembers, within one browser tab session,
-     that you entered, what you answered, and what you've examined.
-     A new tab or window starts fresh (so the door plays again). */
-  function ss(key, val) {
-    if (arguments.length === 2) { sessionStorage.setItem(key, val); return val; }
-    return sessionStorage.getItem(key);
-  }
-  function welcomeSeen() { return ss("welcomeSeen") === "1"; }
-  function visited() {
-    try { return JSON.parse(ss("visited")) || []; } catch (e) { return []; }
-  }
+  /* State lives in memory only, so every page load is a fresh visit:
+     the door plays each time, and the shimmer resets — something you
+     clicked on a previous visit shimmers again until you click it THIS
+     visit. Nothing is remembered across refreshes by design. */
+  var state = { welcomeSeen: false, choice: null, visited: [] };
+  function welcomeSeen() { return state.welcomeSeen; }
+  function visited() { return state.visited; }
   function markVisited(id) {
-    var v = visited();
-    if (v.indexOf(id) === -1) { v.push(id); ss("visited", JSON.stringify(v)); }
+    if (state.visited.indexOf(id) === -1) state.visited.push(id);
   }
-  function visitorChoice() {
-    try { return JSON.parse(ss("visitorChoice")); } catch (e) { return null; }
-  }
+  function visitorChoice() { return state.choice; }
 
   /* [2] ─── HOTSPOTS ───────────────────────────────────────────────────
      For each object in config: an invisible button (the hitbox) and a
@@ -121,10 +115,14 @@
     if (cls) wrap.classList.add(cls);
   }
 
-  /* Is this object relevant to the visitor's welcome answer? */
+  /* Is this object relevant to the visitor's welcome answer?
+     "everyone"-tagged things (the tea, later the blog) shimmer for every
+     visitor — including the "just wandering" crowd. Tagged matches only
+     apply to visitors who picked a matching answer. */
   function isRelevant(obj, choice) {
-    if (!choice || choice.wander) return false;
+    if (!choice) return false;
     if (obj.tags.indexOf("everyone") !== -1) return true;
+    if (choice.wander) return false;
     return obj.tags.some(function (t) { return choice.tags.indexOf(t) !== -1; });
   }
 
@@ -233,8 +231,8 @@
     welcomeActions.hidden = false;
     welcomeDone.focus();
 
-    ss("welcomeSeen", "1");
-    ss("visitorChoice", JSON.stringify({ tags: opt.tags, wander: !!opt.wander }));
+    state.welcomeSeen = true;
+    state.choice = { tags: opt.tags, wander: !!opt.wander };
   }
 
   /* After the card closes: chair stops beckoning; the visitor's
@@ -306,15 +304,23 @@
       (room.offsetHeight - viewport.clientHeight) / 2;
   }
 
-  /* The pan hint: land slightly left of center, glide to center —
-     one continuous motion that quietly says "this view moves". */
-  function driftToCenter() {
+  /* How far left of center the room is first revealed, giving the settle
+     somewhere to glide from. Capped so it stays a hint, never a lurch. */
+  function driftDelta() {
     var overflow = (room.offsetWidth - viewport.clientWidth) / 2;
-    var delta = Math.min(room.offsetWidth * 0.05, Math.max(overflow, 0));
-    if (delta < 8 || reducedMotion) { centerScroll(0); return; }
-    centerScroll(-delta);
+    return Math.min(room.offsetWidth * 0.05, Math.max(overflow, 0));
+  }
+
+  /* The pan hint: the room is revealed slightly left of center (set while
+     it's still hidden behind the door, so there's no snap), and this glides
+     it the rest of the way to center — one continuous motion that quietly
+     says "this view moves". Animates FROM the current position; it never
+     teleports first, which is what used to cause a jolt at the end of the
+     step-in. */
+  function driftToCenter() {
+    var to = (room.offsetWidth - viewport.clientWidth) / 2;   /* true center */
     var from = viewport.scrollLeft;
-    var to = from + delta;
+    if (reducedMotion || Math.abs(to - from) < 8) { centerScroll(0); return; }
     var start = null;
     function step(ts) {
       if (!start) start = ts;
@@ -370,31 +376,51 @@
     doorPos.style.height = h + "px";
     doorPos.style.transformOrigin = DOOR.plate.cx + "% " + DOOR.plate.cy + "%";
 
-    /* The swinging leaf: a box over the leaf region, with its copy of the
-       image offset so only the leaf shows through. */
-    var lx = (DOOR.leaf.x1 / 100) * w;
-    var ly = (DOOR.leaf.y1 / 100) * h;
-    var lw = ((DOOR.leaf.x2 - DOOR.leaf.x1) / 100) * w;
-    var lh = ((DOOR.leaf.y2 - DOOR.leaf.y1) / 100) * h;
+    /* The approach nameplate, painted on the full image so it's visible as
+       you walk up (it rides the zoom). The swinging leaf gets its own
+       matching plate at open time. */
+    doorPlate.style.left = DOOR.plate.cx + "%";
+    doorPlate.style.top = DOOR.plate.cy + "%";
+    doorPlate.style.fontSize = (w * 0.024) + "px";
+
+    return { vw: vw, vh: vh, w: w, h: h, left: left, top: top };
+  }
+
+  /* Build the swinging leaf from wherever the door image is ON SCREEN right
+     now (after the walk-up zoom). The leaf is a top-level panel — not inside
+     the zoomed/translated #door-zoom — so its 3D isn't flattened by a parent
+     transform. We crop its background to exactly the door leaf and drop a
+     matching nameplate on it, so it's pixel-identical to what's underneath
+     the instant we swap and swing. */
+  function openLeaf() {
+    var r = doorImg.getBoundingClientRect();   /* full image, on screen, post-zoom */
+    var L = DOOR.leaf;
+    var lx = r.left + (L.x1 / 100) * r.width;
+    var ly = r.top  + (L.y1 / 100) * r.height;
+    var lw = ((L.x2 - L.x1) / 100) * r.width;
+    var lh = ((L.y2 - L.y1) / 100) * r.height;
+
     doorLeaf.style.left = lx + "px";
     doorLeaf.style.top = ly + "px";
     doorLeaf.style.width = lw + "px";
     doorLeaf.style.height = lh + "px";
-    doorLeafImg.style.width = w + "px";
-    doorLeafImg.style.height = h + "px";
-    doorLeafImg.style.left = -lx + "px";
-    doorLeafImg.style.top = -ly + "px";
+    doorLeaf.style.backgroundImage = "url('assets/door.jpg')";
+    doorLeaf.style.backgroundSize = r.width + "px " + r.height + "px";
+    doorLeaf.style.backgroundPosition =
+      (-(L.x1 / 100) * r.width) + "px " + (-(L.y1 / 100) * r.height) + "px";
 
-    /* Nameplate, placed within the leaf box so it swings with the leaf. */
-    doorPlate.style.left =
-      ((DOOR.plate.cx - DOOR.leaf.x1) / (DOOR.leaf.x2 - DOOR.leaf.x1) * 100) + "%";
-    doorPlate.style.top =
-      ((DOOR.plate.cy - DOOR.leaf.y1) / (DOOR.leaf.y2 - DOOR.leaf.y1) * 100) + "%";
-    doorPlate.style.width = "42%";
-    doorPlate.style.transform = "translate(-50%, -50%)";
-    doorPlate.style.fontSize = (w * 0.024) + "px";
+    /* Matching plate, positioned by where it sits inside the leaf box. */
+    doorLeafPlate.style.left =
+      ((DOOR.plate.cx - L.x1) / (L.x2 - L.x1) * 100) + "%";
+    doorLeafPlate.style.top =
+      ((DOOR.plate.cy - L.y1) / (L.y2 - L.y1) * 100) + "%";
+    doorLeafPlate.style.fontSize = (r.width * 0.024) + "px";
 
-    return { vw: vw, vh: vh, w: w, h: h, left: left, top: top };
+    doorLeaf.hidden = false;
+    /* force layout so the swap + animation start cleanly */
+    void doorLeaf.offsetWidth;
+    doorOverlay.classList.add("opening");   /* hide #door-zoom, reveal room */
+    doorLeaf.classList.add("swing");
   }
 
   /* The walk-up: scale about the nameplate until the door slab covers
@@ -431,7 +457,11 @@
   /* The room waits behind the door already filling the screen (cover),
      centered. */
   function prepareRoomBehindDoor() {
-    centerScroll(0);
+    /* Reveal the room a touch left of center. It's still hidden behind the
+       door when this runs, so the offset can't be seen as a jump; the
+       step-in holds it there and driftToCenter glides it home. */
+    var d = reducedMotion ? 0 : driftDelta();
+    centerScroll(d < 8 ? 0 : -d);
     if (!reducedMotion)
       room.style.transform = "scale(" + (1 / enterZoom()) + ")";
   }
@@ -458,7 +488,6 @@
   }
 
   function finishEntry() {
-    ss("entered", "1");
     lookAround.hidden = false;
     requestAnimationFrame(function () { lookAround.classList.add("shown"); });
   }
@@ -471,7 +500,7 @@
 
     if (reducedMotion) {
       doorPhase = "opening";
-      doorOverlay.classList.add("opening");
+      openLeaf();
       doorLeaf.addEventListener("animationend", function () {
         doorOverlay.hidden = true;
         doorPhase = "done";
@@ -485,8 +514,8 @@
       doorZoom.removeEventListener("transitionend", handler);
       setTimeout(function () {            /* a beat at the threshold */
         doorPhase = "opening";
-        doorOverlay.classList.add("opening");   /* transparent + swing opens */
-        setTimeout(stepIntoRoom, 340);    /* step in mid-swing */
+        openLeaf();                       /* lift the leaf out and swing it */
+        setTimeout(stepIntoRoom, 340);    /* step into the room mid-swing */
         doorLeaf.addEventListener("animationend", function () {
           doorOverlay.hidden = true;
           doorPhase = "done";
@@ -516,10 +545,8 @@
     if (EDIT_MODE) {
       skipDoor();                  /* editor needs the room, not the door */
       lookAround.hidden = true;
-    } else if (ss("entered") === "1") {
-      skipDoor();                  /* already came in this session */
     } else {
-      layoutDoor();
+      layoutDoor();                /* the door greets every visit */
       centerScroll(0);
     }
   }

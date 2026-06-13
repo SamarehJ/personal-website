@@ -65,8 +65,8 @@
       c.setAttribute("class", "pt");
       c.setAttribute("cx", p[0]);
       c.setAttribute("cy", p[1]);
-      c.setAttribute("rx", 0.22);
-      c.setAttribute("ry", 0.22 * (room.offsetWidth / room.offsetHeight));
+      c.setAttribute("rx", 0.11);
+      c.setAttribute("ry", 0.11 * (room.offsetWidth / room.offsetHeight));
       pointsGroup.appendChild(c);
     });
     countEl.textContent = points.length + (points.length === 1 ? " point" : " points");
@@ -138,8 +138,9 @@
   var panel = document.createElement("div");
   panel.id = "editor-panel";
   panel.innerHTML =
-    '<h3>Hotspot editor</h3>' +
-    '<p>Click around an object\u2019s edge to trace it. Drag to pan. ' +
+    '<h3 id="ed-drag" title="Drag to move this panel">Hotspot editor <span class="ed-grip">⠿</span></h3>' +
+    '<p>Click around an object\u2019s edge to trace it. Drag the room to pan, ' +
+    'or drag this panel\u2019s title bar to move it out of the way. ' +
     'Gold shapes are hotspots that already exist.</p>' +
     '<div class="row">' +
     '  <button id="ed-undo">Undo point</button>' +
@@ -150,6 +151,38 @@
     '<textarea id="ed-out" readonly spellcheck="false"></textarea>' +
     '<label><input type="checkbox" id="ed-existing" checked> show existing hotspots</label>';
   document.body.appendChild(panel);
+
+  /* Drag the panel by its title bar, so you can park it off whatever
+     you're tracing. Pointer events cover mouse and touch together. */
+  (function makeDraggable() {
+    var handle = document.getElementById("ed-drag");
+    var dragging = false, startX = 0, startY = 0, baseX = 0, baseY = 0;
+    handle.style.cursor = "move";
+    handle.style.touchAction = "none";
+    handle.addEventListener("pointerdown", function (e) {
+      dragging = true;
+      var r = panel.getBoundingClientRect();
+      // Switch to explicit left/top positioning anchored at the current spot.
+      baseX = r.left; baseY = r.top;
+      panel.style.left = baseX + "px";
+      panel.style.top = baseY + "px";
+      panel.style.right = "auto";
+      startX = e.clientX; startY = e.clientY;
+      handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    handle.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var nx = baseX + (e.clientX - startX);
+      var ny = baseY + (e.clientY - startY);
+      // Keep it on screen.
+      var maxX = window.innerWidth - panel.offsetWidth;
+      var maxY = window.innerHeight - panel.offsetHeight;
+      panel.style.left = Math.max(0, Math.min(maxX, nx)) + "px";
+      panel.style.top = Math.max(0, Math.min(maxY, ny)) + "px";
+    });
+    handle.addEventListener("pointerup", function () { dragging = false; });
+  })();
 
   var countEl = document.getElementById("ed-count");
   var output = document.getElementById("ed-out");

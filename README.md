@@ -70,10 +70,11 @@ accelerates until the door fills the screen, nameplate centered → the
 door swings inward, revealing the lit room → the room steps forward to
 full size and drifts to center.
 
-Within one browser session the door plays once; reopening the tab resets
-it. To rewatch while tuning, use a private window. Reduced-motion
-visitors get simple fades. The name is real text overlaid on the plate —
-if you regenerate the door image, update the `DOOR` block in config.
+The door now greets every visit — it plays on each page load (refresh to
+see it again). Reduced-motion visitors get a simple fade instead of the
+swing. The name is real text overlaid on the plate; if you regenerate the
+door image, update the `DOOR` block in config (the `leaf` rectangle and
+the `plate` center).
 
 ## How highlighting works
 
@@ -83,7 +84,11 @@ if you regenerate the door image, update the `DOOR` block in config.
   themselves never turn off — hover and tap always work on everything.
 - "Just wandering" pulses everything once and shimmers nothing.
 - The eye button (bottom right) re-pulses everything on demand.
-- All of it is per-session; a returning visitor starts fresh.
+- All of it resets on every page load. If someone clicked the tea on a
+  previous visit and then refreshes, it shimmers again until they click
+  it this visit — a fresh look each time.
+- "everyone"-tagged objects (the tea, later the blog) shimmer for every
+  visitor, including the "just wandering" crowd.
 
 ## Adding a new object
 
