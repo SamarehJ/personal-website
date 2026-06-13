@@ -1,0 +1,111 @@
+# Samareh Jack — the office
+
+A point-and-click personal site. You arrive at a door, walk up, it swings
+open onto your office, and objects in the room glow, introduce themselves,
+and lead elsewhere.
+
+## File map
+
+    index.html        page structure (door, room, cards)
+    css/style.css     all styling — has a table of contents at the top
+    js/config.js      ★ THE FILE YOU EDIT — objects, welcome, door geometry
+    js/main.js        the machinery — commented, with a table of contents
+    js/editor.js      the ?edit hotspot tracer
+    why-ai.html       the "why AI" page
+    assets/           office.jpg, door.jpg, previews/ (card images)
+
+## Deploy on GitHub Pages
+
+1. Create a repo (for a root URL, name it `YOURUSERNAME.github.io`).
+2. Put the contents of this folder at the repo root and push.
+3. Repo Settings → Pages → Source: "Deploy from a branch" → `main`, `/ (root)`.
+
+No build step, no dependencies.
+
+## Placeholders to replace (all in js/config.js)
+
+- Buy Me a Coffee URL on the tea (`YOUR-PAGE-HERE`)
+- The LinkedIn URL — I found `linkedin.com/in/samareh-jack-5b1713a` by
+  search; confirm it's yours
+- Resume URL — empty for now, which simply hides the button; drop a PDF
+  in `assets/` and point the link at `assets/resume.pdf` when ready
+
+The card descriptions were written from your live sites as of June 2026 —
+reword freely as the sites evolve.
+
+## Card preview images
+
+Each examine card can show an image across its top. The config already
+points at these paths — drop files there and they appear (a missing file
+just means no image, never an error):
+
+    assets/previews/tea.jpg          a photo or your BMC banner
+    assets/previews/work.jpg         e.g. a resume snippet or headshot
+    assets/previews/accompany.jpg    screenshot of the practice site
+    assets/previews/creedal.jpg      screenshot of the essay
+    assets/previews/justshowup.jpg   screenshot of the events page
+    assets/previews/consensus.jpg    screenshot of the app
+
+To make a screenshot: open the site, and use your browser's built-in
+capture (Chrome: ⌘⇧P → "Capture screenshot") or any screen grab. Crop to
+roughly 3:1 (they display about 540 × 220) and save with the name above.
+
+## Tracing hotspots yourself (?edit)
+
+Open the site with `?edit` on the URL — locally that's
+`index.html?edit`; deployed it's `yoursite.github.io/?edit`.
+
+- Click around the edge of an object; each click drops a point.
+- Existing hotspots show in faint gold. Drag to pan, as usual.
+- "Copy config" puts the `hitbox:` and `outline:` lines on your
+  clipboard — paste them into the object's entry in `js/config.js`.
+- Undo removes the last point; Clear restarts the shape.
+
+Visitors never see the editor; it only exists behind `?edit`.
+
+## How the entrance works
+
+Hallway, slowly drawing you toward the door → click → the walk-up
+accelerates until the door fills the screen, nameplate centered → the
+door swings inward, revealing the lit room → the room steps forward to
+full size and drifts to center.
+
+Within one browser session the door plays once; reopening the tab resets
+it. To rewatch while tuning, use a private window. Reduced-motion
+visitors get simple fades. The name is real text overlaid on the plate —
+if you regenerate the door image, update the `DOOR` block in config.
+
+## How highlighting works
+
+- Only the guest chair pulses until the welcome is answered.
+- An answer pulses the relevant objects twice, then leaves a faint
+  shimmer on them. Examining an object clears its shimmer. The hotspots
+  themselves never turn off — hover and tap always work on everything.
+- "Just wandering" pulses everything once and shimmers nothing.
+- The eye button (bottom right) re-pulses everything on demand.
+- All of it is per-session; a returning visitor starts fresh.
+
+## Adding a new object
+
+Copy any entry in `ROOM_OBJECTS` (js/config.js), then:
+
+1. Trace its `hitbox` and `outline` with `?edit` (above).
+2. Write its `title` (what it's about) and `flavor` (your voice, to the
+   visitor).
+3. Add `links` — every link opens in a new tab; an empty url hides its
+   button.
+4. Pick `tags` so the welcome knows who it's for: `work`,
+   `accompaniment`, `projects`, `creative`, or `everyone`. Multiple
+   tags are fine.
+5. Optionally add an `image` preview (see above).
+
+A commented list of everything still waiting to move in sits at the
+bottom of the objects array.
+
+## Updating the images
+
+- Office: replace `assets/office.jpg`. If the framing changed, re-trace
+  hotspots with `?edit`. If the dimensions changed, update the aspect
+  ratio in `css/style.css` (sections [1] and [3] — two places).
+- Door: replace `assets/door.jpg`, update the `DOOR` block in config
+  (aspect, slab edges, nameplate center — all in % of the image).

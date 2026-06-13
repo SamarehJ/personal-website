@@ -1,0 +1,509 @@
+/* ════════════════════════════════════════════════════════════════════════
+   SAMAREH JACK — THE OFFICE · stylesheet
+
+   TABLE OF CONTENTS
+   [1] Design tokens (colors, fonts) — change the palette here
+   [2] Page basics
+   [3] The room (panning, step-in)
+   [4] The door (entrance overlay, approach, swing)
+   [5] Hotspots (hitboxes + glow states: beckon / reveal / shimmer / hover)
+   [6] Look-around button
+   [7] Cards (examine + welcome modals)
+   [8] Polygon editor (?edit mode)
+   [9] Reduced motion
+   ════════════════════════════════════════════════════════════════════════ */
+
+
+/* [1] ─── DESIGN TOKENS ────────────────────────────────────────────────
+   The palette is pulled from the room itself. Every color in the site
+   references these variables, so retheming = editing this block. */
+:root {
+  --hallway: #15100b;          /* dark wood-and-shadow, outside the room   */
+  --parchment: #f3e9d6;        /* card paper                               */
+  --parchment-edge: #d9c9a8;   /* card borders                             */
+  --ink: #241c14;              /* body text on parchment                   */
+  --walnut: #3a2a1c;           /* headings                                 */
+  --brass: #b8893b;            /* small labels, accents                    */
+  --hibiscus: #a73c34;         /* primary buttons (the tea's color)        */
+  --glow: #ffd98a;             /* hotspot glow (candle gold)               */
+
+  --font-display: "IM Fell English", Georgia, serif;   /* headings, plate  */
+  --font-body: "Spectral", Georgia, serif;             /* body text        */
+  --font-utility: "IBM Plex Mono", monospace;          /* buttons, labels  */
+
+  /* office.jpg is 2738 × 2298. If you replace the image with different
+     dimensions, update this AND the width line in [3]. */
+  --room-aspect: 2738 / 2298;
+
+  /* How much the room rests zoomed-in past "just filling the screen".
+     1.0 = exactly fills (cover). 1.06 = filled, then pushed in a little —
+     this is the resting view you pan around. Raising it crops more and
+     could push edge objects (the couch) out of reach. */
+  --enter-zoom: 1.06;
+}
+
+/* [2] ─── PAGE BASICS ─────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--hallway);
+  font-family: var(--font-body);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+/* [3] ─── THE ROOM ─────────────────────────────────────────────────────
+   The room fills the screen on one axis and overflows on the other;
+   #viewport scrolls (pans) across it. Panning is locked until you're
+   through the door (.inside). */
+#viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  scrollbar-width: none;            /* a room, not a page — no scrollbars */
+}
+#viewport::-webkit-scrollbar { display: none; }
+#viewport.inside { overflow: auto; }
+
+#room {
+  position: relative;
+  /* Base = cover (fills the screen on one axis). Times --enter-zoom =
+     the resting view, a little tighter than cover. */
+  width: calc(max(100vw, 100svh * (2738 / 2298)) * var(--enter-zoom));
+  aspect-ratio: var(--room-aspect);
+  transform-origin: 50% 50%;
+  /* Stepping in: JS starts the room at scale 1/--enter-zoom (exactly
+     cover — fills the page, no black), then animates the transform back
+     to 1 (the resting, slightly-tighter view). A forward push, no pulse. */
+}
+#room.stepping {
+  transition: transform 1.4s cubic-bezier(0.25, 0.6, 0.3, 1);
+}
+
+#room-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* [4] ─── THE DOOR ─────────────────────────────────────────────────────
+   #door-img is a STATIC backdrop (the hallway). #door-leaf is a copy
+   clipped to the door leaf, hinged on its left edge — the ONLY thing that
+   swings. Because the wall/frame exist only on the static backdrop, the
+   swing can never rotate them into view. Perspective is baked into the
+   leaf's own transform (perspective() function), so it turns straight
+   back regardless of the walk-up zoom on its ancestors. */
+#door-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  background: var(--hallway);        /* covers the room until we open */
+  cursor: pointer;
+}
+#door-overlay[hidden] { display: none; }
+#door-overlay:focus-visible { outline: none; }
+#door-overlay.opening { background: transparent; }   /* reveal the room */
+
+#door-zoom {
+  position: absolute;
+  inset: 0;
+  /* The pace of the walk-up (JS sets the transform, this paces it) */
+  transition: transform 1.5s cubic-bezier(0.5, 0.05, 0.7, 0.3);
+}
+
+#door-pos {
+  position: absolute;                /* sized & placed by JS (cover fit) */
+}
+/* Idle breathing: one slow push toward the door that eases to a stop. */
+#door-pos.drifting {
+  animation: door-drift 11s ease-out 1 forwards;
+}
+@keyframes door-drift {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+
+#door-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* The static backdrop is hidden the instant the leaf starts to swing.
+   It's fully behind the (closed) leaf at that moment and otherwise zoomed
+   off-screen, so this is invisible — it just stops the painted door from
+   showing through the doorway as the leaf opens. No transition = no fade. */
+#door-overlay.opening #door-img { opacity: 0; }
+
+/* The swinging leaf: JS sets left/top/width/height to the leaf region and
+   offsets #door-leaf-img so only the leaf shows through. */
+#door-leaf {
+  position: absolute;
+  overflow: hidden;
+  transform-origin: 0% 50%;          /* hinge: leaf's own left edge */
+  backface-visibility: hidden;       /* turns invisible once past edge-on */
+}
+#door-leaf-img {
+  position: absolute;                /* JS offsets it to reveal the leaf */
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* Swing the whole way open: 0 → past edge-on. backface-visibility hides it
+   the moment it turns past 90°, so it leaves by swinging away, never by
+   fading. perspective() is in the transform so depth survives the zoom. */
+#door-overlay.opening #door-leaf {
+  animation: leaf-swing 1.3s cubic-bezier(0.45, 0.04, 0.55, 0.96) forwards;
+}
+@keyframes leaf-swing {
+  from { transform: perspective(1600px) rotateY(0deg); }
+  to   { transform: perspective(1600px) rotateY(115deg); }
+}
+
+/* The name is real text overlaid on the plate (sharp at any size,
+   survives image regeneration). Positioned by JS within the leaf.
+   Font size is set by JS as a fraction of the door's rendered width. */
+#door-plate {
+  position: absolute;
+  text-align: center;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  color: rgba(56, 34, 13, 0.92);
+  text-shadow: 0 1px 1px rgba(255, 236, 190, 0.5);   /* engraved catch */
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#door-hint {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 5svh;
+  text-align: center;
+  font-family: var(--font-utility);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(243, 233, 214, 0.75);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  animation: hint-breathe 2.8s ease-in-out infinite;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#door-overlay.approaching #door-hint { opacity: 0; }
+@keyframes hint-breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.95; }
+}
+
+/* [5] ─── HOTSPOTS ─────────────────────────────────────────────────────
+   Each object = an invisible <button> hitbox + a glow layer.
+   The glow layer is a copy of the room image clipped to the object's
+   outline; the drop-shadow sits on the WRAPPER so the glow follows the
+   clipped shape (a filter on the clipped element would be cut off).
+
+   Glow states:
+     .beckon   welcome object only, until the welcome is answered
+     .reveal   pulse twice — "these are for you" announcement
+     .shimmer  faint standing marker; clears when the object is examined
+     hover / keyboard focus = full glow, always, forever            */
+.hitbox {
+  position: absolute;               /* placed from config hitbox values */
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+.hitbox:focus-visible {
+  outline: 2px dashed var(--glow);
+  outline-offset: 4px;
+}
+
+.glow-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter:
+    drop-shadow(0 0 6px var(--glow))
+    drop-shadow(0 0 18px rgba(255, 217, 138, 0.75))
+    drop-shadow(0 0 40px rgba(255, 200, 110, 0.45));
+}
+.glow-shape {
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/office.jpg");
+  background-size: 100% 100%;
+  /* clip-path polygon comes from config */
+  filter: brightness(1.12) saturate(1.05);
+}
+
+.hitbox:hover + .glow-wrap,
+.hitbox:focus-visible + .glow-wrap { opacity: 1; animation: none; }
+
+.glow-wrap.beckon  { animation: pulse 2.6s ease-in-out infinite; }
+.glow-wrap.reveal  { animation: pulse 1.7s ease-in-out 2; }
+.glow-wrap.shimmer { animation: shimmer 3.4s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.85; }
+}
+@keyframes shimmer {            /* same shape as pulse, much quieter */
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.30; }
+}
+
+/* [6] ─── LOOK-AROUND BUTTON ──────────────────────────────────────────── */
+#look-around {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 20;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(36, 26, 16, 0.62);
+  color: var(--glow);
+  border: 1px solid rgba(184, 137, 59, 0.7);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.15s ease, background 0.15s ease;
+}
+#look-around.shown { opacity: 0.85; }
+#look-around:hover { opacity: 1; background: rgba(48, 34, 20, 0.8); transform: scale(1.06); }
+#look-around:focus-visible { outline: 2px dashed var(--glow); outline-offset: 3px; }
+
+/* [7] ─── CARDS ────────────────────────────────────────────────────────
+   Examine cards and the welcome card share these styles. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(12, 8, 4, 0.55);
+  backdrop-filter: blur(2px);
+}
+.modal-backdrop[hidden] { display: none; }
+
+.card {
+  width: min(34rem, 100%);
+  max-height: 85svh;
+  overflow-y: auto;
+  background:
+    linear-gradient(175deg, rgba(255,252,243,0.5), rgba(0,0,0,0) 30%),
+    var(--parchment);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.4) inset,
+    0 18px 50px rgba(0, 0, 0, 0.55);
+  padding: 1.6rem 1.8rem 1.4rem;
+  animation: card-in 0.28s ease both;
+}
+@keyframes card-in {
+  from { transform: translateY(10px) scale(0.98); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* Optional preview image at the top of an examine card.
+   Drop files in assets/previews/ — see README. */
+#examine-image {
+  display: block;
+  width: calc(100% + 3.6rem);
+  margin: -1.6rem -1.8rem 1.1rem;   /* bleed to the card's edges */
+  max-height: 14rem;
+  object-fit: cover;
+  border-bottom: 1px solid var(--parchment-edge);
+}
+#examine-image[hidden] { display: none; }
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-utility);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.card h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.7rem;
+  line-height: 1.15;
+  color: var(--walnut);
+}
+
+.card-body {
+  margin: 0 0 1.2rem;
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.btn {
+  font-family: var(--font-utility);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  padding: 0.65em 1.2em;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--hibiscus);
+  color: #fdf3e4;
+  border: 1px solid #7e2b25;
+  box-shadow: 0 2px 0 #6f2620;
+}
+.btn-primary:hover { background: #b8463d; }
+
+.btn-quiet {
+  background: transparent;
+  color: var(--walnut);
+  border: 1px solid var(--parchment-edge);
+}
+.btn-quiet:hover { background: rgba(120, 90, 40, 0.08); }
+
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+.option-list button {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  text-align: left;
+  padding: 0.7em 1em;
+  background: rgba(255, 252, 245, 0.55);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 3px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+}
+.option-list button:hover {
+  border-color: var(--brass);
+  background: rgba(255, 250, 235, 0.9);
+  transform: translateX(2px);
+}
+
+.footnote {
+  margin: 0.9rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--parchment-edge);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #5d4a33;
+}
+.footnote a { color: var(--hibiscus); }
+
+/* [8] ─── POLYGON EDITOR (?edit) ───────────────────────────────────────
+   Open index.html?edit to trace hotspots. See js/editor.js.          */
+body.editing .hitbox { pointer-events: none; }   /* clicks land on the room */
+body.editing #look-around { display: none; }
+
+#editor-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.3; }
+#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.35; }
+#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.08; }
+
+#editor-panel {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 70;
+  width: min(21rem, calc(100vw - 2rem));
+  background: var(--parchment);
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  padding: 0.9rem 1rem;
+  font-size: 0.85rem;
+}
+#editor-panel h3 {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.15rem;
+  color: var(--walnut);
+}
+#editor-panel p { margin: 0 0 0.6rem; line-height: 1.4; }
+#editor-panel .row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+#editor-panel button {
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  padding: 0.45em 0.8em;
+  border-radius: 3px;
+  border: 1px solid var(--parchment-edge);
+  background: #fffcf3;
+  cursor: pointer;
+}
+#editor-panel button:hover { border-color: var(--brass); }
+#editor-panel textarea {
+  width: 100%;
+  height: 9rem;
+  font-family: var(--font-utility);
+  font-size: 0.68rem;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 3px;
+  background: #fffcf3;
+  resize: vertical;
+}
+#editor-panel label { display: flex; gap: 0.4em; align-items: center; font-size: 0.78rem; }
+
+/* [9] ─── REDUCED MOTION ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #door-pos.drifting { animation: none; }
+  #door-hint { animation: none; opacity: 0.8; }
+  #door-zoom { transition: none; }
+  #door-overlay.opening #door-leaf { animation: door-fade-only 0.6s ease forwards; }
+  #door-overlay.opening #door-img { opacity: 0; }
+  #room.stepping { transition: none; }
+  .glow-wrap.beckon { animation: none; opacity: 0.7; }
+  .glow-wrap.reveal { animation: none; }
+  .glow-wrap.shimmer { animation: none; opacity: 0.28; }
+  .card { animation: none; }
+}
+@keyframes door-fade-only {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

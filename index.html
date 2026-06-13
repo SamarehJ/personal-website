@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samareh Jack</title>
+<meta name="description" content="The office of Samareh Jack. Come in, look around, click on things.">
+<link rel="preload" as="image" href="assets/door.jpg">
+<link rel="preload" as="image" href="assets/office.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Spectral:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     THE OFFICE — sits beneath the door the whole time, fully lit.
+     Hotspots are injected into #room by js/main.js from js/config.js.
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="viewport" tabindex="-1">
+  <div id="room" aria-label="My office. Objects in the room can be examined.">
+    <img id="room-img" src="assets/office.jpg" alt="A warm, book-lined home office with a wooden desk, an armchair, a green sofa, and a Persian rug." draggable="false">
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     LOOK-AROUND BUTTON — re-pulses every hotspot on demand.
+     ════════════════════════════════════════════════════════════════════ -->
+<button id="look-around" hidden aria-label="Show everything in the room you can look at" title="Look around">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+       stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12Z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+</button>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     THE DOOR — entrance overlay.
+       #door-img    the full hallway photo: a STATIC backdrop. During the
+                    walk-up it zooms toward the door; it never rotates.
+       #door-leaf   a copy of the photo clipped to JUST the door leaf,
+                    hinged on the leaf's own left edge. THIS is the only
+                    thing that swings — so the wall and frame, which live
+                    only on the static backdrop, can never rotate into view.
+                    The nameplate sits on the leaf, so it swings with it.
+     The walk-up zooms until the leaf fills the screen; then the leaf
+     swings the whole way open (turning edge-on and away) to reveal the
+     room behind. It never fades while opening. ═══════════════════════ -->
+<div id="door-overlay" role="button" tabindex="0"
+     aria-label="A wooden door with a brass nameplate reading Samareh Jack. Click to come in.">
+  <div id="door-zoom">
+    <div id="door-pos" class="drifting">
+      <img id="door-img" src="assets/door.jpg" alt="" draggable="false">
+      <div id="door-leaf">
+        <img id="door-leaf-img" src="assets/door.jpg" alt="" draggable="false">
+        <div id="door-plate" aria-hidden="true">Samareh&nbsp;Jack</div>
+      </div>
+    </div>
+  </div>
+  <p id="door-hint">click to come in</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     EXAMINE CARD — opens when an object is clicked.
+     Title and text come from the object's config entry; the image is
+     optional and hides itself if the file doesn't exist yet.
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="examine-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="examine-title">
+    <img id="examine-image" alt="" hidden>
+    <h2 id="examine-title"></h2>
+    <p class="card-body" id="examine-text"></p>
+    <div class="card-actions" id="examine-actions">
+      <!-- link buttons are injected before this button -->
+      <button class="btn btn-quiet" id="examine-stay">Keep looking around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     WELCOME CARD — opens from the guest chair.
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="welcome-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <p class="eyebrow">Take a seat</p>
+    <h2 id="welcome-title">Welcome. What brings you by?</h2>
+
+    <div id="welcome-options" class="option-list"></div>
+
+    <p class="card-body" id="welcome-response" hidden></p>
+
+    <div class="card-actions" id="welcome-actions" hidden>
+      <button class="btn btn-primary" id="welcome-done">Look around</button>
+    </div>
+
+    <p class="footnote">
+      This room was drawn by AI.
+      <a href="why-ai.html">Here's why I chose that.</a>
+    </p>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>
