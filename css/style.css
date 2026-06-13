@@ -446,9 +446,9 @@ body.editing #look-around { display: none; }
   z-index: 5;
   pointer-events: none;
 }
-#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.12; }
-#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.12; }
-#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.04; }
+#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.04; }
+#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.04; }
+#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.015; }
 
 #editor-panel {
   position: fixed;

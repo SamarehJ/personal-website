@@ -65,8 +65,8 @@
       c.setAttribute("class", "pt");
       c.setAttribute("cx", p[0]);
       c.setAttribute("cy", p[1]);
-      c.setAttribute("rx", 0.11);
-      c.setAttribute("ry", 0.11 * (room.offsetWidth / room.offsetHeight));
+      c.setAttribute("rx", 0.045);
+      c.setAttribute("ry", 0.045 * (room.offsetWidth / room.offsetHeight));
       pointsGroup.appendChild(c);
     });
     countEl.textContent = points.length + (points.length === 1 ? " point" : " points");
