@@ -190,15 +190,14 @@ const WELCOME_OPTIONS = [
     tags: ["work"],
     response:
       "Then you'll want my resume and LinkedIn — the official record " +
-      "of where I've been and what I've built."
+      "of where I've been and what I've done."
   },
   {
     text: "I'm interested in accompaniment",
     tags: ["accompaniment"],
     response:
-      "I call it professional accompaniment — short-term support while " +
-      "you get unstuck, designed from the start to end. There's more " +
-      "here if you'd like to read."
+      "I call it professional accompaniment: short-term support while " +
+      "you get unstuck, designed from the start to end."
   },
   {
     text: "Show me the apps and ideas",
@@ -208,10 +207,10 @@ const WELCOME_OPTIONS = [
       "do nearby, and an app for deciding together. They're all here."
   },
   {
-    text: "I came for the music, leather, and writing",
+    text: "I came for the music, leather creations, and writing",
     tags: ["creative"],
     response:
-      "Songs, Bahá'í writings set to music, handmade shoes, ambigrams, " +
+      "Singing, Bahá'í writings set to melodies, handmade shoes, ambigrams, " +
       "and books are on their way — that side of the room is still " +
       "being unpacked. Come back soon."
   },
@@ -236,5 +235,5 @@ const WELCOME_OPTIONS = [
 const DOOR = {
   aspect: 1536 / 2752,
   leaf:  { x1: 21.0, y1: 11.5, x2: 74.0, y2: 80.5 },
-  plate: { cx: 50.0, cy: 27.8 }
+  plate: { cx: 50.0, cy: 28.1 }
 };

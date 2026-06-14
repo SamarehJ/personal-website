@@ -11,7 +11,6 @@ and lead elsewhere.
     js/config.js      ★ THE FILE YOU EDIT — objects, welcome, door geometry
     js/main.js        the machinery — commented, with a table of contents
     js/editor.js      the ?edit hotspot tracer
-    why-ai.html       the "why AI" page
     assets/           office.jpg, door.jpg, previews/ (card images)
 
 ## Deploy on GitHub Pages

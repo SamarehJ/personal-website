@@ -56,6 +56,10 @@
   var welcomeActions = document.getElementById("welcome-actions");
   var welcomeDone = document.getElementById("welcome-done");
 
+  var whyBackdrop = document.getElementById("why-backdrop");
+  var whyLink = document.getElementById("why-link");
+  var whyClose = document.getElementById("why-close");
+
   /* State lives in memory only, so every page load is a fresh visit:
      the door plays each time, and the shimmer resets — something you
      clicked on a previous visit shimmers again until you click it THIS
@@ -255,6 +259,15 @@
     settleAfterWelcome();
   });
 
+  /* The "why AI" footnote button opens a card layered over the welcome. */
+  function openWhy() {
+    lastFocus = document.activeElement;
+    whyBackdrop.hidden = false;
+    whyClose.focus();
+  }
+  whyLink.addEventListener("click", openWhy);
+  whyClose.addEventListener("click", function () { closeModal(whyBackdrop); });
+
   /* [6] ─── MODAL PLUMBING ────────────────────────────────────────────── */
 
   function closeModal(backdrop) {
@@ -264,7 +277,7 @@
 
   /* Click outside a card closes it (and still settles the welcome
      if an answer was chosen). */
-  [examineBackdrop, welcomeBackdrop].forEach(function (bd) {
+  [examineBackdrop, welcomeBackdrop, whyBackdrop].forEach(function (bd) {
     bd.addEventListener("click", function (e) {
       if (e.target !== bd) return;
       var choseWelcome =
@@ -276,7 +289,9 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
-    if (!examineBackdrop.hidden) closeModal(examineBackdrop);
+    /* The why card layers over the welcome, so it closes first. */
+    if (!whyBackdrop.hidden) closeModal(whyBackdrop);
+    else if (!examineBackdrop.hidden) closeModal(examineBackdrop);
     else if (!welcomeBackdrop.hidden) {
       var chose = welcomeSeen() && !welcomeActions.hidden;
       closeModal(welcomeBackdrop);
@@ -541,14 +556,14 @@
   }
 
   function boot() {
-    applyStandingState();
     if (EDIT_MODE) {
       skipDoor();                  /* editor needs the room, not the door */
       lookAround.hidden = true;
-    } else {
-      layoutDoor();                /* the door greets every visit */
-      centerScroll(0);
+      return;                      /* no beckon/shimmer glow while tracing */
     }
+    applyStandingState();
+    layoutDoor();                  /* the door greets every visit */
+    centerScroll(0);
   }
 
   window.addEventListener("resize", function () {

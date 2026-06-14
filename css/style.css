@@ -432,6 +432,16 @@ html, body {
   color: #5d4a33;
 }
 .footnote a { color: var(--hibiscus); }
+/* The "why AI" trigger is a button (opens a popup), styled as an inline link. */
+.linklike {
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--hibiscus);
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 /* [8] ─── POLYGON EDITOR (?edit) ───────────────────────────────────────
    Open index.html?edit to trace hotspots. See js/editor.js.          */
