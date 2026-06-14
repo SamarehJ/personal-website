@@ -55,9 +55,10 @@ html, body {
 }
 
 /* [3] ─── THE ROOM ─────────────────────────────────────────────────────
-   The room fills the screen on one axis and overflows on the other;
-   #viewport scrolls (pans) across it. Panning is locked until you're
-   through the door (.inside). */
+   The room always covers the screen (it's ≥ the viewport on BOTH axes).
+   You can pan horizontally across it, but the vertical axis is locked to
+   center — so the framed view never drifts to the photo's top or bottom
+   edge. Panning is locked entirely until you're through the door (.inside). */
 #viewport {
   position: fixed;
   inset: 0;
@@ -65,7 +66,7 @@ html, body {
   scrollbar-width: none;            /* a room, not a page — no scrollbars */
 }
 #viewport::-webkit-scrollbar { display: none; }
-#viewport.inside { overflow: auto; }
+#viewport.inside { overflow-x: auto; overflow-y: hidden; }
 
 #room {
   position: relative;

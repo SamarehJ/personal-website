@@ -347,18 +347,19 @@
     requestAnimationFrame(step);
   }
 
-  /* Drag-to-pan with the mouse. Touch devices pan natively. */
-  var dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
+  /* Drag-to-pan with the mouse — horizontal only; the vertical axis stays
+     locked at center (see #viewport.inside), so you can't drag to the
+     photo's top or bottom edge. Touch devices pan horizontally natively. */
+  var dragging = false, sx = 0, sl = 0;
   viewport.addEventListener("mousedown", function (e) {
     if (e.target.closest(".hitbox") || e.target.closest(".card")) return;
     dragging = true;
-    sx = e.clientX; sy = e.clientY;
-    sl = viewport.scrollLeft; st = viewport.scrollTop;
+    sx = e.clientX;
+    sl = viewport.scrollLeft;
   });
   window.addEventListener("mousemove", function (e) {
     if (!dragging) return;
     viewport.scrollLeft = sl - (e.clientX - sx);
-    viewport.scrollTop = st - (e.clientY - sy);
   });
   window.addEventListener("mouseup", function () { dragging = false; });
 
