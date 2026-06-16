@@ -70,6 +70,42 @@
   var wrapperBack = document.getElementById("wrapper-back");
   var wrapperNewtab = document.getElementById("wrapper-newtab");
 
+  var aboutBackdrop = document.getElementById("about-backdrop");
+  var aboutEyebrow = document.getElementById("about-eyebrow");
+  var aboutTitle = document.getElementById("about-title");
+  var aboutTeaser = document.getElementById("about-teaser");
+  var aboutFull = document.getElementById("about-full");
+  var aboutMore = document.getElementById("about-more");
+  var aboutClose = document.getElementById("about-close");
+  var aboutCard = aboutBackdrop.querySelector(".card");
+
+  var contactBackdrop = document.getElementById("contact-backdrop");
+  var contactEyebrow = document.getElementById("contact-eyebrow");
+  var contactTitle = document.getElementById("contact-title");
+  var contactIntro = document.getElementById("contact-intro");
+  var contactForm = document.getElementById("contact-form");
+  var contactSubmit = document.getElementById("contact-submit");
+  var contactClose = document.getElementById("contact-close");
+  var contactStatus = document.getElementById("contact-status");
+  var contactDoneActions = document.getElementById("contact-done-actions");
+  var contactDoneClose = document.getElementById("contact-done-close");
+
+  var guestbookBackdrop = document.getElementById("guestbook-backdrop");
+  var guestbookEyebrow = document.getElementById("guestbook-eyebrow");
+  var guestbookTitle = document.getElementById("guestbook-title");
+  var guestbookEntries = document.getElementById("guestbook-entries");
+  var guestbookListView = document.getElementById("guestbook-list-view");
+  var guestbookSignView = document.getElementById("guestbook-sign-view");
+  var guestbookSignOpen = document.getElementById("guestbook-sign-open");
+  var guestbookClose = document.getElementById("guestbook-close");
+  var guestbookPrompt = document.getElementById("guestbook-prompt");
+  var guestbookSubmit = document.getElementById("guestbook-submit");
+  var guestbookBack = document.getElementById("guestbook-back");
+  var guestbookThanks = document.getElementById("guestbook-thanks");
+  var guestbookDoneActions = document.getElementById("guestbook-done-actions");
+  var guestbookDoneClose = document.getElementById("guestbook-done-close");
+  var guestbookCard = guestbookBackdrop.querySelector(".card");
+
   /* State lives in memory only, so every page load is a fresh visit:
      the door plays each time, and the shimmer resets — something you
      clicked on a previous visit shimmers again until you click it THIS
@@ -86,34 +122,66 @@
      For each object in config: an invisible button (the hitbox) and a
      glow layer (the room image clipped to the object's outline).      */
 
-  var glowWraps = {};   /* id → glow element, for the highlight model */
+  var glowWraps = {};   /* id → ARRAY of glow elements (one per shape) */
+
+  /* What a click on any of an object's parts does. */
+  function activate(obj) {
+    if (obj.welcome) openWelcome();
+    else if (obj.about) openAbout(obj);
+    else if (obj.contact) openContact(obj);
+    else if (obj.guestbook) openGuestbook(obj);
+    else openExamine(obj);
+  }
+
+  /* Light (or unlight) every one of an object's parts together, so a
+     two-piece object — e.g. a chair split by the desk — responds as one. */
+  function setHover(id, on) {
+    glowWraps[id].forEach(function (w) { w.classList.toggle("lit", on); });
+  }
 
   ROOM_OBJECTS.forEach(function (obj) {
-    var hit = document.createElement("button");
-    hit.className = "hitbox";
-    hit.style.left = obj.hitbox[0] + "%";
-    hit.style.top = obj.hitbox[1] + "%";
-    hit.style.width = obj.hitbox[2] + "%";
-    hit.style.height = obj.hitbox[3] + "%";
-    hit.setAttribute("aria-label", obj.label);
-    hit.addEventListener("click", function () {
-      if (obj.welcome) openWelcome();
-      else openExamine(obj);
+    /* An object is one or more shapes, each its own hitbox + glow outline.
+       Multi-part objects use `shapes: [{hitbox, outline}, ...]`; a plain
+       `hitbox`/`outline` is treated as a single shape. */
+    var shapes = obj.shapes || [{ hitbox: obj.hitbox, outline: obj.outline }];
+    var wraps = [];
+
+    shapes.forEach(function (s) {
+      var hit = document.createElement("button");
+      hit.className = "hitbox";
+      hit.style.left = s.hitbox[0] + "%";
+      hit.style.top = s.hitbox[1] + "%";
+      hit.style.width = s.hitbox[2] + "%";
+      hit.style.height = s.hitbox[3] + "%";
+      hit.setAttribute("aria-label", obj.label);
+      hit.addEventListener("click", function () { activate(obj); });
+
+      /* Hover (or keyboard focus) on any part lights ALL of the object's
+         parts. Focus only when keyboard-driven, so a closing card doesn't
+         leave the object lit when focus returns to its hitbox. */
+      hit.addEventListener("mouseenter", function () { setHover(obj.id, true); });
+      hit.addEventListener("mouseleave", function () { setHover(obj.id, false); });
+      hit.addEventListener("focus", function () {
+        if (hit.matches(":focus-visible")) setHover(obj.id, true);
+      });
+      hit.addEventListener("blur", function () { setHover(obj.id, false); });
+
+      var wrap = document.createElement("div");
+      wrap.className = "glow-wrap";
+      var glow = document.createElement("div");
+      glow.className = "glow-shape";
+      glow.style.clipPath =
+        "polygon(" +
+        s.outline.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(", ") +
+        ")";
+      wrap.appendChild(glow);
+
+      room.appendChild(hit);
+      room.appendChild(wrap);
+      wraps.push(wrap);
     });
 
-    var wrap = document.createElement("div");
-    wrap.className = "glow-wrap";
-    var shape = document.createElement("div");
-    shape.className = "glow-shape";
-    shape.style.clipPath =
-      "polygon(" +
-      obj.outline.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(", ") +
-      ")";
-    wrap.appendChild(shape);
-
-    room.appendChild(hit);
-    room.appendChild(wrap);   /* must directly follow its hitbox (CSS `+`) */
-    glowWraps[obj.id] = wrap;
+    glowWraps[obj.id] = wraps;
   });
 
   /* [3] ─── HIGHLIGHT MODEL ────────────────────────────────────────────
@@ -124,9 +192,11 @@
                  objects; examining one clears it
      Hover/tap always works on everything, regardless of any of this. */
 
-  function setState(wrap, cls) {
-    wrap.classList.remove("beckon", "reveal", "shimmer");
-    if (cls) wrap.classList.add(cls);
+  function setState(id, cls) {
+    glowWraps[id].forEach(function (w) {
+      w.classList.remove("beckon", "reveal", "shimmer");
+      if (cls) w.classList.add(cls);
+    });
   }
 
   /* Is this object relevant to the visitor's welcome answer?
@@ -146,13 +216,12 @@
     var choice = visitorChoice();
     var seen = visited();
     ROOM_OBJECTS.forEach(function (obj) {
-      var wrap = glowWraps[obj.id];
       if (obj.welcome) {
-        setState(wrap, welcomeSeen() ? null : "beckon");
+        setState(obj.id, welcomeSeen() ? null : "beckon");
       } else if (isRelevant(obj, choice) && seen.indexOf(obj.id) === -1) {
-        setState(wrap, "shimmer");
+        setState(obj.id, "shimmer");
       } else {
-        setState(wrap, null);
+        setState(obj.id, null);
       }
     });
   }
@@ -160,12 +229,14 @@
   /* Pulse a set of objects twice, then settle into standing state. */
   function pulseThenSettle(ids) {
     ids.forEach(function (id) {
-      var wrap = glowWraps[id];
-      setState(wrap, null);
-      void wrap.offsetWidth;            /* flush, so the animation restarts */
-      wrap.classList.add("reveal");
-      wrap.addEventListener("animationend", function handler() {
-        wrap.removeEventListener("animationend", handler);
+      var wraps = glowWraps[id];
+      wraps.forEach(function (w) {
+        w.classList.remove("beckon", "reveal", "shimmer");
+        void w.offsetWidth;             /* flush, so the animation restarts */
+        w.classList.add("reveal");
+      });
+      wraps[0].addEventListener("animationend", function handler() {
+        wraps[0].removeEventListener("animationend", handler);
         applyStandingState();
       });
     });
@@ -322,6 +393,190 @@
   whyLink.addEventListener("click", openWhy);
   whyClose.addEventListener("click", function () { closeModal(whyBackdrop); });
 
+  /* Render a list of paragraph strings into a container as .card-body <p>s. */
+  function renderParas(container, paras) {
+    container.innerHTML = "";
+    (paras || []).forEach(function (para) {
+      var p = document.createElement("p");
+      p.className = "card-body";
+      p.textContent = para;
+      container.appendChild(p);
+    });
+  }
+
+  /* ─── ABOUT ME (the desk chair) ──────────────────────────────────────
+     Teaser first; "read more" swaps in the full text. */
+  aboutEyebrow.textContent = ABOUT.eyebrow;
+  aboutTitle.textContent = ABOUT.title;
+  aboutMore.textContent = ABOUT.readMore;
+  renderParas(aboutTeaser, ABOUT.teaser);
+  renderParas(aboutFull, ABOUT.full);
+
+  function openAbout(obj) {
+    lastFocus = document.activeElement;
+    markVisited(obj.id);
+    applyStandingState();
+    aboutFull.hidden = true;            /* always start on the teaser */
+    aboutTeaser.hidden = false;
+    aboutMore.hidden = false;
+    aboutBackdrop.hidden = false;
+    aboutCard.scrollTop = 0;
+    aboutMore.focus({ preventScroll: true });
+  }
+  aboutMore.addEventListener("click", function () {
+    aboutTeaser.hidden = true;
+    aboutFull.hidden = false;
+    aboutMore.hidden = true;
+    aboutCard.scrollTop = 0;
+  });
+  aboutClose.addEventListener("click", function () { closeModal(aboutBackdrop); });
+
+  /* ─── FORM POST (contact + guest book) ───────────────────────────────
+     AJAX to Formspree so the visitor never leaves the office. */
+  function postForm(form, onResult) {
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    var submitBtn = form.querySelector("button[type=submit]");
+    if (submitBtn) submitBtn.disabled = true;
+    fetch(FORMSPREE_ENDPOINT, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { "Accept": "application/json" }
+    }).then(function (res) {
+      if (submitBtn) submitBtn.disabled = false;
+      onResult(res.ok);
+    }).catch(function () {
+      if (submitBtn) submitBtn.disabled = false;
+      onResult(false);
+    });
+  }
+  var SEND_ERROR =
+    "Something went wrong sending that — please try again in a moment.";
+
+  /* ─── CONTACT (the pencil holder) ─────────────────────────────────────── */
+  contactEyebrow.textContent = CONTACT.eyebrow;
+  contactTitle.textContent = CONTACT.title;
+  contactIntro.textContent = CONTACT.intro;
+  contactSubmit.textContent = CONTACT.submit;
+
+  function openContact(obj) {
+    lastFocus = document.activeElement;
+    markVisited(obj.id);
+    applyStandingState();
+    contactForm.reset();
+    contactForm.hidden = false;
+    contactStatus.hidden = true;
+    contactStatus.classList.remove("is-error");
+    contactDoneActions.hidden = true;
+    contactBackdrop.hidden = false;
+    contactForm.querySelector("input[name=name]").focus({ preventScroll: true });
+  }
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    postForm(contactForm, function (ok) {
+      contactStatus.hidden = false;
+      if (ok) {
+        contactForm.hidden = true;
+        contactStatus.textContent = CONTACT.success;
+        contactStatus.classList.remove("is-error");
+        contactDoneActions.hidden = false;     /* a way back to the room */
+      } else {
+        contactStatus.textContent = SEND_ERROR;
+        contactStatus.classList.add("is-error");
+      }
+    });
+  });
+  contactClose.addEventListener("click", function () { closeModal(contactBackdrop); });
+  contactDoneClose.addEventListener("click", function () { closeModal(contactBackdrop); });
+
+  /* ─── GUEST BOOK (the books) ──────────────────────────────────────────── */
+  guestbookEyebrow.textContent = GUESTBOOK.eyebrow;
+  guestbookTitle.textContent = GUESTBOOK.title;
+  guestbookSignOpen.textContent = GUESTBOOK.signLabel;
+  guestbookSubmit.textContent = GUESTBOOK.submit;
+  guestbookPrompt.textContent = GUESTBOOK.prompt;
+
+  function renderGuestbookEntries() {
+    guestbookEntries.innerHTML = "";
+    var entries = GUESTBOOK.entries || [];
+    if (!entries.length) {
+      var empty = document.createElement("p");
+      empty.className = "gb-empty";
+      empty.textContent = "No entries yet — yours could be the first.";
+      guestbookEntries.appendChild(empty);
+      return;
+    }
+    entries.forEach(function (entry) {
+      var wrap = document.createElement("div");
+      wrap.className = "gb-entry";
+      var note = document.createElement("p");
+      note.className = "gb-note";
+      note.textContent = "“" + (entry.note || "") + "”";
+      wrap.appendChild(note);
+      var by = document.createElement("p");
+      by.className = "gb-by";
+      var name = entry.name || "Anonymous";
+      if (entry.link && /^https?:\/\//i.test(entry.link)) {
+        by.appendChild(document.createTextNode("— "));
+        var a = document.createElement("a");
+        a.href = entry.link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = name;
+        by.appendChild(a);
+      } else {
+        by.textContent = "— " + name;
+      }
+      wrap.appendChild(by);
+      guestbookEntries.appendChild(wrap);
+    });
+  }
+  renderGuestbookEntries();
+
+  function showGuestbookList() {
+    guestbookSignView.hidden = true;
+    guestbookThanks.hidden = true;
+    guestbookDoneActions.hidden = true;
+    guestbookListView.hidden = false;
+    guestbookCard.scrollTop = 0;
+  }
+  function openGuestbook(obj) {
+    lastFocus = document.activeElement;
+    markVisited(obj.id);
+    applyStandingState();
+    guestbookSignView.reset();
+    guestbookThanks.classList.remove("is-error");
+    showGuestbookList();
+    guestbookBackdrop.hidden = false;
+    guestbookSignOpen.focus({ preventScroll: true });
+  }
+  guestbookSignOpen.addEventListener("click", function () {
+    guestbookListView.hidden = true;
+    guestbookThanks.hidden = true;
+    guestbookSignView.hidden = false;
+    guestbookCard.scrollTop = 0;
+    guestbookSignView.querySelector("input[name=name]").focus({ preventScroll: true });
+  });
+  guestbookBack.addEventListener("click", showGuestbookList);
+  guestbookSignView.addEventListener("submit", function (e) {
+    e.preventDefault();
+    postForm(guestbookSignView, function (ok) {
+      guestbookThanks.hidden = false;
+      if (ok) {
+        guestbookSignView.hidden = true;
+        guestbookListView.hidden = true;
+        guestbookThanks.textContent = GUESTBOOK.thanks;
+        guestbookThanks.classList.remove("is-error");
+        guestbookDoneActions.hidden = false;       /* a way back to the room */
+        guestbookCard.scrollTop = 0;
+      } else {
+        guestbookThanks.textContent = SEND_ERROR;   /* shown below the form */
+        guestbookThanks.classList.add("is-error");
+      }
+    });
+  });
+  guestbookClose.addEventListener("click", function () { closeModal(guestbookBackdrop); });
+  guestbookDoneClose.addEventListener("click", function () { closeModal(guestbookBackdrop); });
+
   /* [6] ─── MODAL PLUMBING ────────────────────────────────────────────── */
 
   function closeModal(backdrop) {
@@ -331,7 +586,8 @@
 
   /* Click outside a card closes it (and still settles the welcome
      if an answer was chosen). */
-  [examineBackdrop, welcomeBackdrop, whyBackdrop].forEach(function (bd) {
+  [examineBackdrop, welcomeBackdrop, whyBackdrop,
+   aboutBackdrop, contactBackdrop, guestbookBackdrop].forEach(function (bd) {
     bd.addEventListener("click", function (e) {
       if (e.target !== bd) return;
       var choseWelcome =
@@ -348,6 +604,9 @@
     /* The why card layers over the welcome, so it closes next. */
     else if (!whyBackdrop.hidden) closeModal(whyBackdrop);
     else if (!examineBackdrop.hidden) closeModal(examineBackdrop);
+    else if (!aboutBackdrop.hidden) closeModal(aboutBackdrop);
+    else if (!contactBackdrop.hidden) closeModal(contactBackdrop);
+    else if (!guestbookBackdrop.hidden) closeModal(guestbookBackdrop);
     else if (!welcomeBackdrop.hidden) {
       var chose = welcomeSeen() && !welcomeActions.hidden;
       closeModal(welcomeBackdrop);

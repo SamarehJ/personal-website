@@ -40,11 +40,15 @@
   function drawExisting() {
     existingGroup.innerHTML = "";
     ROOM_OBJECTS.forEach(function (obj) {
-      var poly = document.createElementNS(SVG_NS, "polygon");
-      poly.setAttribute("class", "existing");
-      poly.setAttribute("points",
-        obj.outline.map(function (p) { return p[0] + "," + p[1]; }).join(" "));
-      existingGroup.appendChild(poly);
+      var shapes = obj.shapes || [{ outline: obj.outline }];
+      shapes.forEach(function (s) {
+        if (!s.outline) return;
+        var poly = document.createElementNS(SVG_NS, "polygon");
+        poly.setAttribute("class", "existing");
+        poly.setAttribute("points",
+          s.outline.map(function (p) { return p[0] + "," + p[1]; }).join(" "));
+        existingGroup.appendChild(poly);
+      });
     });
   }
   drawExisting();
@@ -186,6 +190,14 @@
 
   var countEl = document.getElementById("ed-count");
   var output = document.getElementById("ed-out");
+
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+      e.preventDefault();
+      points.pop();
+      redraw();
+    }
+  });
 
   document.getElementById("ed-undo").addEventListener("click", function () {
     points.pop(); redraw();

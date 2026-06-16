@@ -114,6 +114,91 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════
+     ABOUT ME — the desk chair. Teaser first, then "read more" → full text.
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="about-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <p class="eyebrow" id="about-eyebrow"></p>
+    <h2 id="about-title"></h2>
+    <div id="about-teaser"></div>
+    <div id="about-full" hidden></div>
+    <div class="card-actions">
+      <button class="btn btn-primary" id="about-more"></button>
+      <button class="btn btn-quiet" id="about-close">Keep looking around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     CONTACT — the pencil holder. A message form that posts to Formspree.
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="contact-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+    <p class="eyebrow" id="contact-eyebrow"></p>
+    <h2 id="contact-title"></h2>
+    <p class="card-body" id="contact-intro"></p>
+    <form id="contact-form" novalidate>
+      <input type="hidden" name="type" value="contact">
+      <input type="hidden" name="_subject" value="A note from the office">
+      <label class="field"><span>Your name</span>
+        <input name="name" type="text" autocomplete="name" required></label>
+      <label class="field"><span>Email</span>
+        <input name="email" type="email" autocomplete="email" required></label>
+      <label class="field"><span>Message</span>
+        <textarea name="message" rows="4" required></textarea></label>
+      <div class="card-actions">
+        <button type="submit" class="btn btn-primary" id="contact-submit"></button>
+        <button type="button" class="btn btn-quiet" id="contact-close">Keep looking around</button>
+      </div>
+    </form>
+    <p class="form-status" id="contact-status" hidden></p>
+    <div class="card-actions" id="contact-done-actions" hidden>
+      <button type="button" class="btn btn-quiet" id="contact-done-close">Keep looking around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     GUEST BOOK — the books. Read existing entries, or sign the book
+     (sign form posts to Formspree; entries are curated in by hand).
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="guestbook-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="guestbook-title">
+    <p class="eyebrow" id="guestbook-eyebrow"></p>
+    <h2 id="guestbook-title"></h2>
+
+    <div id="guestbook-list-view">
+      <div id="guestbook-entries"></div>
+      <div class="card-actions">
+        <button class="btn btn-primary" id="guestbook-sign-open"></button>
+        <button class="btn btn-quiet" id="guestbook-close">Keep looking around</button>
+      </div>
+    </div>
+
+    <form id="guestbook-sign-view" novalidate hidden>
+      <input type="hidden" name="type" value="guestbook">
+      <input type="hidden" name="_subject" value="A new guest-book entry">
+      <p class="card-body" id="guestbook-prompt"></p>
+      <label class="field"><span>Your name</span>
+        <input name="name" type="text" autocomplete="name" required></label>
+      <label class="field"><span>A link, if you'd like <em>(optional)</em></span>
+        <input name="link" type="url" placeholder="https://"></label>
+      <label class="field"><span>Your note</span>
+        <textarea name="note" rows="4" required></textarea></label>
+      <div class="card-actions">
+        <button type="submit" class="btn btn-primary" id="guestbook-submit"></button>
+        <button type="button" class="btn btn-quiet" id="guestbook-back">Back</button>
+      </div>
+    </form>
+
+    <p class="form-status" id="guestbook-thanks" hidden></p>
+    <div class="card-actions" id="guestbook-done-actions" hidden>
+      <button type="button" class="btn btn-quiet" id="guestbook-done-close">Keep looking around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
      SITE WRAPPER — opens a link INSIDE the office (config link embed:true).
      A walnut bar over the dimmed room, the site in an iframe beneath it.
      "Back to the room" closes the panel and returns to the room (the

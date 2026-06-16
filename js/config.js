@@ -5,7 +5,10 @@
    [1] ROOM_OBJECTS     the clickable things and where they lead
    [2] WELCOME_OPTIONS  the guest-chair conversation
    [3] WHY_AI           the "why there's AI" note (welcome footnote)
-   [4] DOOR             door image geometry (only if you regenerate it)
+   [4] ABOUT            the about-me text (the desk chair)
+   [5] CONTACT          the message form copy (the pencil holder)
+   [6] GUESTBOOK        the guest book: prompt, thanks, and entries
+   [7] DOOR             door image geometry (only if you regenerate it)
 
    ── Anatomy of an object ───────────────────────────────────────────────
    id       unique name, no spaces
@@ -27,6 +30,13 @@
             An object can carry several tags.
    hitbox   clickable rectangle, % of the image: [left, top, width, height]
    outline  the glowing shape, % polygon: [[x, y], [x, y], ...]
+   shapes   OPTIONAL — for an object that shows in two (or more) separate
+            pieces (e.g. a chair split by the desk). A list of
+            { hitbox, outline } pairs; click or hover any piece and they
+            all light together. Use this INSTEAD of hitbox/outline:
+              shapes: [ { hitbox:[…], outline:[…] },
+                        { hitbox:[…], outline:[…] } ]
+            Trace each piece separately with ?edit and paste them in.
 
    → To trace a new hitbox + outline, open the site with ?edit on the
      URL (e.g. index.html?edit) and click around the object. The editor
@@ -37,6 +47,28 @@
 
 /* [1] ─── ROOM OBJECTS ─────────────────────────────────────────────────── */
 const ROOM_OBJECTS = [
+  
+  {
+    id: "rug",
+    label: "The rug",
+    title: "Consensus",
+    flavor:
+      "An app for groups that decide together. It starts values-first: " +
+      "before any decision, the group finds what it actually shares — " +
+      "not what's urgent, not what's loudest — and builds on that " +
+      "common ground.",
+    image: "assets/previews/consensus.jpg",
+    links: [
+      { label: "Find common ground",
+        url: "https://consensus.samarehjack.com", embed: true }
+    ],
+    tags: ["projects"],
+hitbox: [18.7, 74.3, 47.3, 17.7],
+outline: [
+  [27.3, 74.8], [60.4, 75.5], [65.5, 91.5], [19.2, 91.5], [26.7, 75]
+]
+  },
+  
   {
     id: "guest-chair",
     welcome: true,
@@ -45,25 +77,6 @@ const ROOM_OBJECTS = [
 hitbox: [15.7, 52, 25.2, 33.3],
 outline: [
   [24.4, 84.6], [25.1, 84.8], [25.2, 83.9], [25.5, 82.9], [26.4, 79], [26.6, 77.2], [26.9, 76.3], [26.9, 76.1], [27, 75.9], [27.2, 74.8], [27.3, 74.5], [27.4, 74.5], [27.6, 74.5], [30.8, 73.2], [36.9, 70.6], [38.9, 79.7], [39.2, 79.6], [39.4, 79.5], [38.9, 75.5], [38.5, 72.9], [38.1, 70.3], [40.2, 69], [40.2, 68.2], [39.9, 67.8], [40.1, 67.6], [40.4, 67.1], [40.4, 66.2], [40.3, 64.9], [39.7, 64.5], [38.5, 63.8], [37.6, 63.4], [37.4, 61.7], [38.2, 61.5], [38.4, 61.2], [38.4, 60.6], [38.1, 60.3], [37.7, 60.3], [33.2, 61.8], [32.7, 61.7], [32.1, 61.7], [30.9, 61.9], [30.6, 62], [30.9, 58.6], [31, 58.1], [31.1, 57.7], [30.4, 57.6], [28.6, 58], [27.4, 56.2], [26.7, 55.6], [25.8, 55], [23.1, 53.7], [22, 53.2], [21.7, 53.2], [21.7, 53.9], [18.9, 53], [18.1, 52.7], [17.6, 52.5], [17.1, 52.6], [16.3, 53.2], [16.2, 53.3], [17.8, 61.9], [19.4, 69.8], [19.4, 70.1], [20.1, 70.9], [20.7, 71.4], [20.1, 74.5], [19.2, 79.8], [19.8, 80], [20.5, 77.3], [20.7, 76.4], [21.2, 73.8], [21.5, 72.9], [21.6, 72.4], [25.6, 74.5], [26, 74.5], [25.6, 76.8], [25.7, 77.1], [25.5, 77.4], [25.3, 78.6], [25.4, 78.7], [25.3, 78.8], [24.9, 81.1], [25.2, 81.3], [24.9, 81.4], [24.8, 82.3], [24.8, 82.6], [24.7, 82.7], [24.5, 83.7]
-]
-  },
-
-  {
-    id: "hibiscus-tea",
-    label: "The hibiscus tea",
-    title: "Buy me a tea",
-    flavor:
-      "Hibiscus — my favorite. If what I'm building here means something " +
-      "to you, you can put the kettle on for the next cup.",
-    image: "assets/previews/tea.jpg",
-    links: [
-      { label: "Buy me a tea",
-        url: "https://buymeacoffee.com/samarehjack" }   /* ← replace */
-    ],
-    tags: ["everyone"],
-hitbox: [47.7, 48.4, 4.4, 3.8],
-outline: [
-  [48.7, 50.8], [48.3, 50.3], [48.2, 49.9], [48.4, 49.5], [48.7, 49.5], [48.8, 49.1], [49.1, 48.9], [50.3, 48.9], [50.8, 49], [50.9, 49.2], [50.9, 49.6], [50.7, 50.7], [51.4, 50.8], [51.6, 51], [51.5, 51.2], [50.9, 51.6], [48.8, 51.7], [48.2, 51.2], [48.2, 51], [48.7, 50.9]
 ]
   },
 
@@ -112,6 +125,17 @@ outline: [
   },
 
   {
+    id: "books",
+    guestbook: true,
+    label: "The books under the lamp",
+    tags: ["everyone"],
+hitbox: [29.9, 48.4, 8.1, 4.1],
+outline: [
+  [30.8, 49.6], [31.1, 49.4], [31.6, 48.9], [37.1, 49], [37.2, 49.1], [37.2, 49.2], [37.2, 49.9], [37.3, 49.8], [37.3, 50.4], [37.4, 50.3], [37.5, 50.4], [37.4, 50.5], [37.4, 51.2], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 51.9], [36.8, 52], [30.5, 51.9], [30.4, 51.8], [30.4, 51.3], [30.7, 51], [30.7, 50.3], [30.7, 50.2], [30.8, 50.2], [30.7, 50.1], [30.7, 49.9]
+]
+  },
+  
+  {
     id: "desk-lamp",
     label: "The desk lamp",
     title: "Creedal AI",
@@ -139,7 +163,7 @@ outline: [
     flavor:
       "Free and low-cost family events near home — Madison, Wisconsin " +
       "for now. No planning, no digging through feeds: see what's on, " +
-      "grab your coat, and just show up.",
+      "grab your coat, and just show up. Currently in development - not fully populated or functioning yet.",
     image: "assets/previews/justshowup.jpg",
     links: [
       { label: "See what's on",
@@ -152,26 +176,57 @@ outline: [
 ]
   },
 
+  /* ── These three open special panels instead of an examine card:
+       `about` → the about-me flow, `contact` → the message form,
+       `guestbook` → the guest book. Their copy lives in the ABOUT,
+       CONTACT and GUESTBOOK blocks below.
+       ⚠ The hitbox/outline values here are ROUGH PLACEHOLDERS so they're
+       clickable now — re-trace each one with ?edit for a clean glow. */
   {
-    id: "rug",
-    label: "The rug",
-    title: "Consensus",
-    flavor:
-      "An app for groups that decide together. It starts values-first: " +
-      "before any decision, the group finds what it actually shares — " +
-      "not what's urgent, not what's loudest — and builds on that " +
-      "common ground.",
-    image: "assets/previews/consensus.jpg",
-    links: [
-      { label: "Find common ground",
-        url: "https://consensus.samarehjack.com", embed: true }
-    ],
-    tags: ["projects"],
-hitbox: [18.7, 74.3, 47.3, 17.7],
+    id: "desk-chair",
+    about: true,
+    label: "The desk chair",
+    tags: ["everyone"],
+shapes: [ { hitbox: [40.8, 56, 13.6, 11.5],
 outline: [
-  [27.3, 74.8], [60.4, 75.5], [65.5, 91.5], [19.2, 91.5], [26.7, 75]
+  [42.9, 66.5], [43.1, 66.8], [43.5, 66.7], [43.6, 66.5], [43.6, 66.1], [43.5, 65.9], [43.5, 65.7], [43.5, 65.7], [44.8, 65.1], [46.3, 64.4], [47.1, 64], [47.4, 64], [48.1, 64.5], [49.2, 65.2], [49.9, 65.8], [50.4, 66.1], [50.3, 66.2], [50.2, 66.7], [50.3, 67], [50.6, 67.1], [50.8, 66.9], [51, 66.7], [51, 66.2], [50.8, 66.2], [50.8, 65.4], [49.4, 63.8], [51, 63.8], [52.9, 63.8], [52.9, 63.9], [52.9, 64.1], [52.8, 64.3], [52.9, 64.6], [53, 64.7], [53.2, 64.8], [53.4, 64.8], [53.4, 64.5], [53.5, 64.4], [53.5, 64.2], [53.3, 64.1], [53.3, 63.1], [51.1, 62.7], [49.5, 62.5], [48.2, 62.4], [47.9, 62.3], [47.8, 61.9], [47.9, 61.7], [47.9, 61.2], [47.9, 60.9], [47.9, 60.6], [48.2, 60.6], [49.8, 59.9], [52, 59.6], [53.8, 59], [53.9, 56.5], [41.7, 56.5], [41.4, 57], [41.4, 57.2], [41.5, 57.3], [41.4, 57.6], [41.3, 57.9], [41.3, 58.3], [41.5, 58.6], [41.8, 59], [42, 59.3], [42.1, 59.4], [42.8, 59.6], [43.9, 59.7], [45.1, 59.9], [45.1, 59.9], [44.9, 60], [44.9, 60.2], [45, 60.3], [45, 60.5], [45.1, 60.3], [45.7, 60.5], [46.2, 60.5], [46.7, 60.6], [46.9, 60.6], [46.9, 60.8], [46.9, 60.9], [47, 61.1], [47.1, 61.9], [47, 61.9], [47, 62.2], [41.9, 62.7], [41.9, 63.2], [41.9, 63.6], [41.8, 63.8], [41.9, 64], [41.9, 64.1], [42.1, 64.3], [42.3, 64.3], [42.3, 64.3], [42.5, 64.1], [42.5, 63.9], [42.5, 63.8], [42.4, 63.7], [42.4, 63.4], [44.9, 63.7], [43, 65.1], [42.9, 65.1], [43, 65.8], [43, 65.9], [42.8, 66], [42.8, 66.3]
+] },
+  { hitbox: [39.8, 42.3, 10.2, 7.7],
+outline: [
+  [46.8, 49.1], [46.8, 48.9], [47.5, 48.8], [48.2, 48.6], [48.2, 48.7], [48.5, 48.7], [48.8, 48.5], [49.1, 48.3], [49.2, 48.1], [49.4, 47.8], [49.4, 47.5], [49.4, 46.7], [49.4, 45.8], [49.3, 45], [49.3, 44.4], [49.1, 44.1], [48.9, 43.6], [48.7, 43.3], [48.3, 43.1], [47.7, 42.9], [46.9, 42.8], [45.5, 42.9], [43.2, 43.1], [42.6, 43.1], [41.9, 43.1], [41.6, 43.1], [41.1, 43.1], [40.9, 43.1], [40.7, 43.2], [40.5, 43.4], [40.3, 43.5], [40.3, 43.8], [40.3, 45.2], [40.5, 47.6], [40.5, 48.6], [40.6, 48.9], [40.7, 49.1], [40.9, 49.2], [41.2, 49.3], [42, 49.3], [41.9, 49.6], [42.7, 49.6], [42.8, 49.3], [46.4, 48.9], [46.4, 49], [46.1, 49], [46.1, 49.2]
+] } ]
+  },
+
+  {
+    id: "hibiscus-tea",
+    label: "The hibiscus tea",
+    title: "Buy me a tea",
+    flavor:
+      "Hibiscus — my favorite. If what I'm building here means something " +
+      "to you, you can put the kettle on for the next cup.",
+    image: "assets/previews/tea.jpg",
+    links: [
+      { label: "Buy me a tea",
+        url: "https://buymeacoffee.com/samarehjack" }   /* ← replace */
+    ],
+    tags: ["everyone"],
+hitbox: [47.7, 48.4, 4.4, 3.8],
+outline: [
+  [48.7, 50.8], [48.3, 50.3], [48.2, 49.9], [48.4, 49.5], [48.7, 49.5], [48.8, 49.1], [49.1, 48.9], [50.3, 48.9], [50.8, 49], [50.9, 49.2], [50.9, 49.6], [50.7, 50.7], [51.4, 50.8], [51.6, 51], [51.5, 51.2], [50.9, 51.6], [48.8, 51.7], [48.2, 51.2], [48.2, 51], [48.7, 50.9]
+]
+  },
+
+  {
+    id: "pencil-holder",
+    contact: true,
+    label: "The pencil holder",
+    tags: ["everyone"],
+hitbox: [37.1, 46, 4.1, 6.3],
+outline: [
+  [38.2, 51.8], [39, 51.8], [39.7, 51.8], [40, 51.7], [40.1, 51.2], [40.3, 51.1], [40.6, 50.7], [40.8, 50.2], [40.8, 49.8], [40.7, 49.6], [40.5, 49.3], [40.1, 49.2], [40, 49.1], [39.8, 49], [40.1, 48.5], [40.3, 47.7], [40.3, 47.6], [40.2, 47.5], [40, 47.3], [40, 47.3], [39.8, 47.3], [39.8, 47.1], [39.6, 47.1], [39.4, 47.6], [39.2, 47.6], [39.1, 47.3], [38.9, 47.6], [38.9, 48], [38.4, 46.5], [38.2, 46.6], [38.4, 47.9], [38, 47.7], [38, 47], [37.8, 47], [37.8, 47.2], [37.6, 47.3], [37.7, 47.7], [37.8, 47.9], [37.9, 48.1], [38.2, 48.9], [38.1, 48.9]
 ]
   }
+
 
   /* ── Waiting to move in (no pages to link yet) ──────────────────────
        songs on video ................. tags: ["creative"]
@@ -258,7 +313,77 @@ const WHY_AI = {
   close: "Back to the room"
 };
 
-/* [4] ─── DOOR GEOMETRY ────────────────────────────────────────────────
+/* [4] ─── ABOUT ME (the desk chair) ────────────────────────────────────
+   First click shows `teaser`; "read more" reveals `full`. Both are lists
+   of paragraphs. PLACEHOLDER copy — replace with your own. */
+const ABOUT = {
+  eyebrow: "About me",
+  title: "This is my place",
+  teaser: [
+    "PLACEHOLDER — a couple of warm sentences in your voice: this is my " +
+    "office, I'm glad you wandered in, here's the gist of who I am.",
+    "If you'd like to know me better, pull up a chair and read on."
+  ],
+  readMore: "Read about me",
+  full: [
+    "PLACEHOLDER — the longer version. Where you're from, what you care " +
+    "about, what you're building and why it matters to you.",
+    "PLACEHOLDER — another paragraph: the through-line of your work, the " +
+    "values underneath it, where you're headed.",
+    "PLACEHOLDER — a closing thought. Replace all of this; it lives in " +
+    "js/config.js under ABOUT."
+  ]
+};
+
+/* [5] ─── CONTACT (the pencil holder) ──────────────────────────────────
+   A short message form that posts to Formspree (FORMSPREE_ENDPOINT below).
+   `success` shows in place of the form after a send. */
+const CONTACT = {
+  eyebrow: "Get in touch",
+  title: "Leave me a note",
+  intro:
+    "PLACEHOLDER — a line inviting them to say hello, ask a question, or " +
+    "reach out about working together.",
+  submit: "Send",
+  success:
+    "Thank you — your note is on its way. I read everything myself and " +
+    "I'll get back to you."
+};
+
+/* [6] ─── GUEST BOOK (the books under the lamp) ─────────────────────────
+   The book is curated: visitors send an entry, it reaches you via
+   Formspree, and YOU add it here by hand — so nothing public is ever
+   un-vetted. Add new entries to the TOP of `entries`.
+   Each entry: { note, name, link } — link is optional. */
+const GUESTBOOK = {
+  eyebrow: "The guest book",
+  title: "Who's stopped by",
+  prompt:
+    "Before you go, I'd love for you to sign my guest book — tell me " +
+    "which ideas here spoke to you, and why.",
+  signLabel: "Sign the guest book",
+  submit: "Sign the book",
+  thanks:
+    "Thank you so much for signing. I read every note by hand and put " +
+    "them up myself, so yours should appear soon. Thanks again for " +
+    "stopping by.",
+  entries: [
+    /* Example entries — replace or delete these with real ones. */
+    { note: "The values-first idea for AI is the thing I keep thinking " +
+            "about. It named something I couldn't quite articulate.",
+      name: "An early visitor", link: "https://www.google.com" },
+    { note: "Came for the accompaniment, stayed for the whole room. The " +
+            "tea was a lovely touch.",
+      name: "Maya", link: "" }
+  ]
+};
+
+/* Formspree — the contact form and the guest-book sign form both POST here.
+   Each submission carries a hidden `type` field (contact / guestbook) so
+   you can tell them apart in your inbox. */
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/mnjzeodj";
+
+/* [7] ─── DOOR GEOMETRY ────────────────────────────────────────────────
    Only changes if you regenerate the door image (assets/door.jpg,
    currently 1536 × 2752). All values are % of that image.
      leaf  = the door panel that swings. Match it to the painted leaf's

@@ -109,6 +109,33 @@ Copy any entry in `ROOM_OBJECTS` (js/config.js), then:
 A commented list of everything still waiting to move in sits at the
 bottom of the objects array.
 
+Three objects open special panels instead of an examine card, set by a
+flag on the object: `about: true` (the desk chair → about-me),
+`contact: true` (the pencil holder → message form), and
+`guestbook: true` (the books → guest book). Their copy lives in the
+`ABOUT`, `CONTACT`, and `GUESTBOOK` blocks of `js/config.js`.
+
+## About me, contact, and the guest book
+
+- **About me** (`ABOUT` in config): a short `teaser`, then a `full`
+  version behind "read more". Currently PLACEHOLDER text — replace it.
+- **Contact** (`CONTACT` in config) and **guest book sign form** both POST
+  to Formspree. Set your endpoint once in `FORMSPREE_ENDPOINT`
+  (already wired to your `f/mnjzeodj`). Each submission carries a hidden
+  `type` field (`contact` / `guestbook`) so you can tell them apart in
+  your inbox. The forms submit without leaving the office.
+- **Guest book** (`GUESTBOOK` in config) is **curated by you**. Visitors
+  send an entry through the sign form; it arrives in your Formspree inbox;
+  you add the ones you like to `GUESTBOOK.entries` by hand and push. Each
+  entry is `{ note, name, link }` (link optional); newest goes at the top.
+  Nothing is public until you add it, so there's no spam to moderate and
+  no database to run. Two example entries are in there now — replace or
+  delete them.
+
+The three hotspots ship with ROUGH placeholder coordinates so they're
+clickable immediately — re-trace each (desk chair, pencil holder, books)
+with `?edit` for a clean glow.
+
 ## Updating the images
 
 - Office: replace `assets/office.jpg`. If the framing changed, re-trace
