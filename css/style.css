@@ -9,8 +9,9 @@
    [5] Hotspots (hitboxes + glow states: beckon / reveal / shimmer / hover)
    [6] Look-around button
    [7] Cards (examine + welcome modals)
-   [8] Polygon editor (?edit mode)
-   [9] Reduced motion
+   [8] Site wrapper (embedded pages)
+   [9] Polygon editor (?edit mode)
+   [10] Reduced motion
    ════════════════════════════════════════════════════════════════════════ */
 
 
@@ -444,7 +445,117 @@ html, body {
   cursor: pointer;
 }
 
-/* [8] ─── POLYGON EDITOR (?edit) ───────────────────────────────────────
+/* [8] ─── SITE WRAPPER ─────────────────────────────────────────────────
+   A link with embed:true opens here instead of a new tab. It borrows the
+   pop-up cards' language: a parchment header bar (the title as a serif
+   heading, a quiet "Back to the room" button, a hibiscus link out) above
+   the site in an iframe. Inset so the dimmed office still frames it. */
+#site-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 70;                       /* above the room, the eye, and the cards */
+  background: rgba(12, 8, 4, 0.55);  /* same dim as the modal backdrops */
+  backdrop-filter: blur(2px);
+  padding: clamp(10px, 2.4vmin, 26px);
+  animation: fade-in 0.22s ease both;
+}
+#site-wrapper[hidden] { display: none; }
+
+/* The panel is one big card: same paper, border, and shadow as the modals.
+   It's parchment all over, so the site sits matted inside a complete frame —
+   title bar at the top, paper margin on the other three sides. */
+#wrapper-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--parchment-edge);
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.4) inset,
+    0 18px 50px rgba(0, 0, 0, 0.55);
+  background:
+    linear-gradient(175deg, rgba(255, 252, 243, 0.6), rgba(0, 0, 0, 0) 22%),
+    var(--parchment);
+}
+
+#wrapper-bar {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* back · title · newtab, title centered */
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+/* The matte: parchment around the framed site on the remaining three sides. */
+#wrapper-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0 16px 16px;
+}
+
+/* "Back to the room" — the cards' quiet button. */
+#wrapper-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-utility);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  padding: 0.5em 0.95em;
+  border-radius: 3px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--walnut);
+  border: 1px solid var(--parchment-edge);
+  transition: background 0.12s ease;
+}
+#wrapper-back:hover { background: rgba(120, 90, 40, 0.08); }
+#wrapper-back:active { transform: translateY(1px); }
+
+/* The site name — the cards' heading voice. */
+#wrapper-title {
+  justify-self: center;
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--walnut);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* "Open in new tab" — a hibiscus link, like the cards' accents. */
+#wrapper-newtab {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--hibiscus);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.12s ease;
+}
+#wrapper-newtab:hover { opacity: 0.72; }
+#wrapper-frame {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 2px;
+  background: #fff;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* [9] ─── POLYGON EDITOR (?edit) ───────────────────────────────────────
    Open index.html?edit to trace hotspots. See js/editor.js.          */
 body.editing .hitbox { pointer-events: none; }   /* clicks land on the room */
 body.editing #look-around { display: none; }
@@ -512,8 +623,9 @@ body.editing #look-around { display: none; }
 }
 #editor-panel label { display: flex; gap: 0.4em; align-items: center; font-size: 0.78rem; }
 
-/* [9] ─── REDUCED MOTION ──────────────────────────────────────────────── */
+/* [10] ─── REDUCED MOTION ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  #site-wrapper { animation: none; }
   #door-pos.drifting { animation: none; }
   #door-hint { animation: none; opacity: 0.8; }
   #door-zoom { transition: none; }

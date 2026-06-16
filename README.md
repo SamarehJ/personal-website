@@ -96,8 +96,11 @@ Copy any entry in `ROOM_OBJECTS` (js/config.js), then:
 1. Trace its `hitbox` and `outline` with `?edit` (above).
 2. Write its `title` (what it's about) and `flavor` (your voice, to the
    visitor).
-3. Add `links` — every link opens in a new tab; an empty url hides its
-   button.
+3. Add `links` — by default a link opens in a new tab; an empty url hides
+   its button. Add `embed: true` to a link to open it *inside* the office
+   instead (a framed panel with a "Back to the room" bar). That only works
+   for pages that allow framing — your own sites and PDFs do; LinkedIn and
+   Buy Me a Coffee don't, so leave those without `embed`.
 4. Pick `tags` so the welcome knows who it's for: `work`,
    `accompaniment`, `projects`, `creative`, or `everyone`. Multiple
    tags are fine.

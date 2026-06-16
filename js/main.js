@@ -59,6 +59,16 @@
   var whyBackdrop = document.getElementById("why-backdrop");
   var whyLink = document.getElementById("why-link");
   var whyClose = document.getElementById("why-close");
+  var whyEyebrow = document.getElementById("why-eyebrow");
+  var whyTitle = document.getElementById("why-title");
+  var whyBody = document.getElementById("why-body");
+  var whyCard = whyBackdrop.querySelector(".card");
+
+  var siteWrapper = document.getElementById("site-wrapper");
+  var wrapperFrame = document.getElementById("wrapper-frame");
+  var wrapperTitle = document.getElementById("wrapper-title");
+  var wrapperBack = document.getElementById("wrapper-back");
+  var wrapperNewtab = document.getElementById("wrapper-newtab");
 
   /* State lives in memory only, so every page load is a fresh visit:
      the door plays each time, and the shimmer resets — something you
@@ -184,8 +194,10 @@
       examineImage.src = obj.image;
     }
 
-    /* Rebuild this card's link buttons (everything opens a new tab;
-       a link with an empty url is simply not shown). */
+    /* Rebuild this card's link buttons. An empty url is simply not shown.
+       embed:true opens the link INSIDE the office (the wrapper); everything
+       else opens a new tab. Either way the card closes first, so a later
+       "Back to the room" returns to the room, not this popup. */
     examineActions.querySelectorAll(".btn-primary").forEach(function (b) { b.remove(); });
     (obj.links || []).forEach(function (link) {
       if (!link.url) return;
@@ -193,8 +205,9 @@
       b.className = "btn btn-primary";
       b.textContent = link.label;
       b.addEventListener("click", function () {
-        window.open(link.url, "_blank", "noopener");
         closeModal(examineBackdrop);
+        if (link.embed) openWrapper(link.url, obj.title || obj.label);
+        else window.open(link.url, "_blank", "noopener");
       });
       examineActions.insertBefore(b, examineStay);
     });
@@ -206,6 +219,30 @@
   }
 
   examineStay.addEventListener("click", function () { closeModal(examineBackdrop); });
+
+  /* ─── THE SITE WRAPPER ───────────────────────────────────────────────
+     Opens an embed:true link inside the office. The room stays mounted
+     underneath; closing the wrapper just hides it and reveals the room
+     exactly as it was — never the door, never the examine card (which the
+     link click already closed). */
+  function openWrapper(url, title) {
+    wrapperTitle.textContent = title || "";
+    wrapperNewtab.href = url;
+    wrapperFrame.src = url;
+    siteWrapper.hidden = false;
+    wrapperBack.focus();
+  }
+  function closeWrapper() {
+    if (siteWrapper.hidden) return;
+    siteWrapper.hidden = true;
+    wrapperFrame.src = "about:blank";          /* stop the embedded page */
+    if (!lookAround.hidden) lookAround.focus();
+  }
+  wrapperBack.addEventListener("click", closeWrapper);
+  /* Clicking the dimmed office around the panel also returns to the room. */
+  siteWrapper.addEventListener("click", function (e) {
+    if (e.target === siteWrapper) closeWrapper();
+  });
 
   /* [5] ─── WELCOME FLOW ──────────────────────────────────────────────── */
 
@@ -259,11 +296,28 @@
     settleAfterWelcome();
   });
 
+  /* Fill the "why AI" card from config (WHY_AI) — same source as the rest
+     of the visitor-facing words. */
+  function renderWhy() {
+    whyEyebrow.textContent = WHY_AI.eyebrow;
+    whyTitle.textContent = WHY_AI.title;
+    whyClose.textContent = WHY_AI.close;
+    whyBody.innerHTML = "";
+    WHY_AI.body.forEach(function (para) {
+      var p = document.createElement("p");
+      p.className = "card-body";
+      p.textContent = para;
+      whyBody.appendChild(p);
+    });
+  }
+  renderWhy();
+
   /* The "why AI" footnote button opens a card layered over the welcome. */
   function openWhy() {
     lastFocus = document.activeElement;
     whyBackdrop.hidden = false;
-    whyClose.focus();
+    whyCard.scrollTop = 0;                       /* always open at the top */
+    whyClose.focus({ preventScroll: true });     /* …focusing must not scroll it down */
   }
   whyLink.addEventListener("click", openWhy);
   whyClose.addEventListener("click", function () { closeModal(whyBackdrop); });
@@ -289,8 +343,10 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
-    /* The why card layers over the welcome, so it closes first. */
-    if (!whyBackdrop.hidden) closeModal(whyBackdrop);
+    /* The wrapper sits above everything, so it closes first. */
+    if (!siteWrapper.hidden) closeWrapper();
+    /* The why card layers over the welcome, so it closes next. */
+    else if (!whyBackdrop.hidden) closeModal(whyBackdrop);
     else if (!examineBackdrop.hidden) closeModal(examineBackdrop);
     else if (!welcomeBackdrop.hidden) {
       var chose = welcomeSeen() && !welcomeActions.hidden;
@@ -339,8 +395,11 @@
     var start = null;
     function step(ts) {
       if (!start) start = ts;
-      var t = Math.min((ts - start) / 1100, 1);
-      var eased = 1 - Math.pow(1 - t, 3);   /* ease-out cubic */
+      var t = Math.min((ts - start) / 2400, 1);   /* slow, unhurried glide */
+      /* ease-in-out cubic: eases in AND out, gentle at both ends */
+      var eased = t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
       viewport.scrollLeft = from + (to - from) * eased;
       if (t < 1) requestAnimationFrame(step);
     }
