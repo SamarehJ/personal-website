@@ -315,23 +315,37 @@ const WHY_AI = {
 
 /* [4] ─── ABOUT ME (the desk chair) ────────────────────────────────────
    First click shows `teaser`; "read more" reveals `full`. Both are lists
-   of paragraphs. PLACEHOLDER copy — replace with your own. */
+   of paragraphs. A nested array (a list inside the list) renders as a
+   bulleted list instead of a paragraph. */
 const ABOUT = {
   eyebrow: "About me",
   title: "This is my place",
   teaser: [
-    "PLACEHOLDER — a couple of warm sentences in your voice: this is my " +
-    "office, I'm glad you wandered in, here's the gist of who I am.",
+    "This is my digital office, furnished with the things I do and make. I'm glad you stopped by. Here's where I can tell you more about me - the person behind everything else in this room - and the connecting instinct that runs through all my ideas and pursuits.",
     "If you'd like to know me better, pull up a chair and read on."
   ],
   readMore: "Read about me",
   full: [
-    "PLACEHOLDER — the longer version. Where you're from, what you care " +
-    "about, what you're building and why it matters to you.",
-    "PLACEHOLDER — another paragraph: the through-line of your work, the " +
-    "values underneath it, where you're headed.",
-    "PLACEHOLDER — a closing thought. Replace all of this; it lives in " +
-    "js/config.js under ABOUT."
+    "I come up with ideas easily, and the more constraints you give me, the more I'll generate. Once in a while a particular kind of idea hits like lightning, too intriguing and exciting to ignore, and trying to ignore it just drives me nuts. So I can't help but explore it, which almost always means making or doing something. It's the start of its own kind of adventure, a deep exploration of what it would look like for the idea to actually exist in the real world. These ideas sometimes take me into areas where I have no expertise, and push me to expand what I know and can do. I learn as much as I need to, as a student exploring what's possible, and step away once I know enough to move the vision forward. The title that usually comes with the new craft doesn't much interest me, since my goal is creation, not expertise as an end.",
+
+    "The ideas that take hold of me the strongest are the ones centered on people, about what sits underneath the way we relate, decide, grow, and reach each other. I hold my values deeply, and they engender these ideas, often in reaction to seeing those same values violated in the world. I'll notice that something meant to serve people has been perverted into causing harm in the name of help, and in the same moment I'll envision the version that puts the person back at the center, built that way from the ground up instead of patched on after. Once I can see it, I can't unsee it. And if I can't find it being done anywhere, I get an irresistible itch to do something about it. I don't fully know why. The seeing just stays with me until I act.",
+
+    "Those values come down to a handful of convictions I hold closely:",
+
+    [
+      "People can be trusted with the truth and with their own choices. The moment help starts to take over, or to make someone need me, it has stopped being help.",
+      "I want to see things as they really are. When something already exists, I look for the good in it first, and then for how it might be better, instead of taking it as fixed or tearing it down for sport.",
+      "People matter equally, and no one's preferences count for more than anyone else's. Our differences are part of what makes us worth knowing, not something to smooth away. And connection is something we need in order to be well, so drawing people closer matters more to me than almost anything that sets them apart.",
+      "Whatever I make should work and be beautiful at the same time, with neither one owed an apology, and it should be in service of people, not for show."
+    ],
+
+    "I try to build for people as we actually are, with all the ego and gaming and ordinary bad days that come with us, and I still start from trust. I would rather be the optimist who built in the safeguards than the cynic who turned out to be right.",
+
+    "Those same values show up plainly in how I work with people directly. Given the chance, I would rather help someone find what they already carry in them than hand them my version of it, and I step back as soon as they no longer need me. The strongest pull of all is toward educating, which I feel most with my own children, and it reaches out from there to anyone I get to teach. There's a satisfaction in it I find nowhere else.",
+
+    "What makes all of this possible is a constant reaching to understand more, through experience and through exploration and constant reflection. A lot of that exploration happens by way of imagination and expression: through melody, through movement, through line and story. Something in me reaches for these, and I answer, because answering meets a real need and satisfies on its own terms. Each time I do, the range of what feels possible to me widens and my thinking sharpens, which lets me connect ideas from far-apart domains and discover what happens where they overlap.",
+
+    "Set all of it side by side and the pieces share a shape. Underneath the ideas, the making, the helping, and the exploring, the same thing is doing the asking, and it is my intuition. I've come to trust what it tells me, to tell it apart from whatever only imitates it, and to trust it a little more each time it proves out. Faced one at a time, from the inside and from the outside, these all turn out to be one thing: a single person exploring what it means to be alive, trying to leave the world a little better in whatever way I can reach, and trusting, more and more, the quiet sense that keeps pointing the way."
   ]
 };
 
@@ -342,8 +356,8 @@ const CONTACT = {
   eyebrow: "Get in touch",
   title: "Leave me a note",
   intro:
-    "PLACEHOLDER — a line inviting them to say hello, ask a question, or " +
-    "reach out about working together.",
+    "I'm always happy to connect with people. Feel free to " +
+    "say hello, ask a question, or reach out about working together..",
   submit: "Send",
   success:
     "Thank you — your note is on its way. I read everything myself and " +
@@ -356,25 +370,21 @@ const CONTACT = {
    un-vetted. Add new entries to the TOP of `entries`.
    Each entry: { note, name, link } — link is optional. */
 const GUESTBOOK = {
-  eyebrow: "The guest book",
-  title: "Who's stopped by",
+  eyebrow: "Who's stopped by",
+  title: "The guest book",
   prompt:
-    "Before you go, I'd love for you to sign my guest book — tell me " +
+    "Thanks for coming by. Before you go, I'd love for you to write something in my guest book — tell me " +
     "which ideas here spoke to you, and why.",
-  signLabel: "Sign the guest book",
-  submit: "Sign the book",
+  signLabel: "Write in the guest book",
+  submit: "Write in the book",
   thanks:
     "Thank you so much for signing. I read every note by hand and put " +
     "them up myself, so yours should appear soon. Thanks again for " +
     "stopping by.",
   entries: [
     /* Example entries — replace or delete these with real ones. */
-    { note: "The values-first idea for AI is the thing I keep thinking " +
-            "about. It named something I couldn't quite articulate.",
-      name: "An early visitor", link: "https://www.google.com" },
-    { note: "Came for the accompaniment, stayed for the whole room. The " +
-            "tea was a lovely touch.",
-      name: "Maya", link: "" }
+    { note: "Be the first to say you were here.",
+      name: "N/A", link: "" }
   ]
 };
 

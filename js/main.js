@@ -393,14 +393,26 @@
   whyLink.addEventListener("click", openWhy);
   whyClose.addEventListener("click", function () { closeModal(whyBackdrop); });
 
-  /* Render a list of paragraph strings into a container as .card-body <p>s. */
-  function renderParas(container, paras) {
+  /* Render a list of items into a container. A string becomes a .card-body
+     paragraph; a nested array becomes a bulleted list. */
+  function renderParas(container, items) {
     container.innerHTML = "";
-    (paras || []).forEach(function (para) {
-      var p = document.createElement("p");
-      p.className = "card-body";
-      p.textContent = para;
-      container.appendChild(p);
+    (items || []).forEach(function (item) {
+      if (Array.isArray(item)) {
+        var ul = document.createElement("ul");
+        ul.className = "card-list";
+        item.forEach(function (point) {
+          var li = document.createElement("li");
+          li.textContent = point;
+          ul.appendChild(li);
+        });
+        container.appendChild(ul);
+      } else {
+        var p = document.createElement("p");
+        p.className = "card-body";
+        p.textContent = item;
+        container.appendChild(p);
+      }
     });
   }
 
