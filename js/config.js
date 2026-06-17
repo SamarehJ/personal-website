@@ -315,37 +315,29 @@ const WHY_AI = {
 
 /* [4] ─── ABOUT ME (the desk chair) ────────────────────────────────────
    First click shows `teaser`; "read more" reveals `full`. Both are lists
-   of paragraphs. A nested array (a list inside the list) renders as a
-   bulleted list instead of a paragraph. */
+   of paragraphs. */
 const ABOUT = {
-  eyebrow: "About me",
-  title: "This is my place",
+  eyebrow: "My chair",
+  title: "About me",
   teaser: [
     "This is my digital office, furnished with the things I do and make. I'm glad you stopped by. Here's where I can tell you more about me - the person behind everything else in this room - and the connecting instinct that runs through all my ideas and pursuits.",
     "If you'd like to know me better, pull up a chair and read on."
   ],
   readMore: "Read about me",
   full: [
-    "I come up with ideas easily, and the more constraints you give me, the more I'll generate. Once in a while a particular kind of idea hits like lightning, too intriguing and exciting to ignore, and trying to ignore it just drives me nuts. So I can't help but explore it, which almost always means making or doing something. It's the start of its own kind of adventure, a deep exploration of what it would look like for the idea to actually exist in the real world. These ideas sometimes take me into areas where I have no expertise, and push me to expand what I know and can do. I learn as much as I need to, as a student exploring what's possible, and step away once I know enough to move the vision forward. The title that usually comes with the new craft doesn't much interest me, since my goal is creation, not expertise as an end.",
+    "I come up with ideas easily, and constraints only make me generate more of them. Once in a while a particular kind of idea hits like lightning, too intriguing and exciting to ignore. I can't help but explore it, usually by making or doing something, and the exploration turns into its own kind of adventure, a deep dig into what it would take for the idea to actually exist in the world. It often carries me into areas where I have no expertise and pushes me to expand what I know and can do. I learn as much as I need to, like a student seeing what's possible, and step away once I know enough to move the vision forward. The title that comes with the new craft doesn't much interest me, since my goal is creation, not expertise as an end.",
 
-    "The ideas that take hold of me the strongest are the ones centered on people, about what sits underneath the way we relate, decide, grow, and reach each other. I hold my values deeply, and they engender these ideas, often in reaction to seeing those same values violated in the world. I'll notice that something meant to serve people has been perverted into causing harm in the name of help, and in the same moment I'll envision the version that puts the person back at the center, built that way from the ground up instead of patched on after. Once I can see it, I can't unsee it. And if I can't find it being done anywhere, I get an irresistible itch to do something about it. I don't fully know why. The seeing just stays with me until I act.",
+    "The kind of ideas that take hold of me are telling. The ones that grip hardest are about people, about what sits underneath the way we relate, decide, grow, and reach each other. They come from values I hold deeply, often in reaction to seeing those same values violated. I'll notice that something meant to serve people has been perverted into harming them in the name of help, and in the same moment I'll see the version that puts the person back at the center, built that way from the ground up instead of patched on after. Once I can see it, I can't unsee it. I don't fully know why. The seeing just stays with me until I act.",
 
-    "Those values come down to a handful of convictions I hold closely:",
+    "Underneath those ideas are the values they come from. I trust people, and would rather leave them their autonomy than manage them with paternalism or moral judgement. What's true matters to me more than what's comfortable or flattering. Genuine connection, I believe, is something we need to be well, in a person and in a society. Whatever I make, I want useful and beautiful at once. And I love how different we all are, so I put my energy into drawing out the best in people, the optimist who builds in the safeguards rather than the cynic who turns out to be right. A great deal of this was shaped by my faith; I'm a Bahá'í.",
 
-    [
-      "People can be trusted with the truth and with their own choices. The moment help starts to take over, or to make someone need me, it has stopped being help.",
-      "I want to see things as they really are. When something already exists, I look for the good in it first, and then for how it might be better, instead of taking it as fixed or tearing it down for sport.",
-      "People matter equally, and no one's preferences count for more than anyone else's. Our differences are part of what makes us worth knowing, not something to smooth away. And connection is something we need in order to be well, so drawing people closer matters more to me than almost anything that sets them apart.",
-      "Whatever I make should work and be beautiful at the same time, with neither one owed an apology, and it should be in service of people, not for show."
-    ],
+    "Those same values show up in how I am with people directly. Given the chance, I would rather help someone find what they already carry than hand them my version of it, and I step back as soon as they no longer need me. The pull is strongest with my own children, in the slow work of shaping a young mind, and it reaches out from there to anyone I get to teach. There's a satisfaction in it I find nowhere else.",
 
-    "I try to build for people as we actually are, with all the ego and gaming and ordinary bad days that come with us, and I still start from trust. I would rather be the optimist who built in the safeguards than the cynic who turned out to be right.",
+    "What feeds all of it is a pull to expand myself and my world by experiencing, exploring, and expressing. This is where I turn to artistic and creative pursuits like social dancing, singing, art, acting, or improv. Something in me reaches for that, and answering it meets a real need, satisfying and deepening on its own. It also widens the field of what feels possible to me, and a wider field is what lets me connect ideas from far-apart places and find what happens where they overlap.",
 
-    "Those same values show up plainly in how I work with people directly. Given the chance, I would rather help someone find what they already carry in them than hand them my version of it, and I step back as soon as they no longer need me. The strongest pull of all is toward educating, which I feel most with my own children, and it reaches out from there to anyone I get to teach. There's a satisfaction in it I find nowhere else.",
+    "Under all of it is my intuition. The better I've come to know it, and to tell it from everything that only looks like it, the more freely ideas flow in and decisions flow out.",
 
-    "What makes all of this possible is a constant reaching to understand more, through experience and through exploration and constant reflection. A lot of that exploration happens by way of imagination and expression: through melody, through movement, through line and story. Something in me reaches for these, and I answer, because answering meets a real need and satisfies on its own terms. Each time I do, the range of what feels possible to me widens and my thinking sharpens, which lets me connect ideas from far-apart domains and discover what happens where they overlap.",
-
-    "Set all of it side by side and the pieces share a shape. Underneath the ideas, the making, the helping, and the exploring, the same thing is doing the asking, and it is my intuition. I've come to trust what it tells me, to tell it apart from whatever only imitates it, and to trust it a little more each time it proves out. Faced one at a time, from the inside and from the outside, these all turn out to be one thing: a single person exploring what it means to be alive, trying to leave the world a little better in whatever way I can reach, and trusting, more and more, the quiet sense that keeps pointing the way."
+    "I think each person is a bit like a prism - the light of their internal drive, seen through the facets of where and how and why. What I've shared here is the shape of mine, as I understand myself now: one instinct, rooted in my values, exploring what it means to be alive, and trying to leave the world a little better in whatever small way I can. The singular light of my intuition scattered across the wide spectrum of how I show up in the world."
   ]
 };
 
