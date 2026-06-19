@@ -269,9 +269,9 @@ html, body {
   0%, 100% { opacity: 0; }
   50% { opacity: 0.85; }
 }
-@keyframes shimmer {            /* a standing glow that never fully fades */
-  0%, 100% { opacity: 0.18; }
-  50% { opacity: 0.58; }
+@keyframes shimmer {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.80; }
 }
 
 /* [6] ─── LOOK-AROUND BUTTON ──────────────────────────────────────────── */
@@ -734,9 +734,26 @@ html, body {
 body.editing .hitbox { pointer-events: none; }   /* clicks land on the room */
 body.editing #look-around { display: none; }
 body.editing #directory-open { display: none; }
-/* A reticle cursor whose centre is a precise dot — that dot (the cursor's
-   hotspot at 14,14) marks exactly where a click drops a point. */
-body.editing #room { cursor: url("../assets/edit-cursor.svg") 14 14, crosshair; }
+/* The OS cursor is hidden over the room; the editor draws its own reticle
+   into #editor-svg (see js/editor.js), positioned with the exact click math
+   so the dot can't drift from the click point the way a custom hardware
+   cursor does when the browser scales it on HiDPI displays. */
+body.editing #room { cursor: none; }
+/* The reticle is the same artwork as the old hardware cursor
+   (assets/edit-cursor.svg) — gapped arms with a fine center dot. The only
+   change is that JS positions it from the exact click math, so it can't
+   drift from the click point the way a custom cursor's hotspot does when
+   the browser scales it on HiDPI displays. The 28×28 art centers its dot
+   at 14,14, so the negative margins land that dot on the aim point. */
+#ed-reticle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  z-index: 6;
+  pointer-events: none;
+  background: url("../assets/edit-cursor.svg") center / contain no-repeat;
+}
 
 #editor-svg {
   position: absolute;

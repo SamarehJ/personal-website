@@ -60,6 +60,31 @@
   var pointsGroup = document.createElementNS(SVG_NS, "g");
   svg.appendChild(pointsGroup);
 
+  /* ── Live reticle ───────────────────────────────────────────────────
+     The OS cursor is hidden over the room (see style.css). We draw our own
+     crosshair, placed with the SAME math the click handler uses — so the
+     mark sits exactly where the next point will land, with no hotspot drift
+     from custom-cursor scaling on HiDPI displays.
+
+     A plain HTML element (not SVG) so the crosshair is a fixed pixel size
+     and the exact aim point is the bare intersection of two thin arms — no
+     fill over it. Its color (white, dark halo) is neither the hibiscus of
+     the shape you're tracing nor the gold of existing hotspots, so it never
+     blends into either. */
+  var reticle = document.createElement("div");
+  reticle.id = "ed-reticle";
+  reticle.style.display = "none";
+  room.appendChild(reticle);
+
+  function moveReticle(clientX, clientY) {
+    var rect = room.getBoundingClientRect();
+    reticle.style.left = ((clientX - rect.left) / rect.width) * 100 + "%";
+    reticle.style.top = ((clientY - rect.top) / rect.height) * 100 + "%";
+    reticle.style.display = "";
+  }
+  room.addEventListener("mousemove", function (e) { moveReticle(e.clientX, e.clientY); });
+  room.addEventListener("mouseleave", function () { reticle.style.display = "none"; });
+
   function redraw() {
     currentPoly.setAttribute("points",
       points.map(function (p) { return p[0] + "," + p[1]; }).join(" "));

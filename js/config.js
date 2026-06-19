@@ -130,7 +130,7 @@ outline: [
   
   {
     id: "desk-lamp",
-    order: 4,
+    order: 6,
     label: "The desk lamp",
     title: "Creedal AI",
     flavor:
@@ -152,18 +152,19 @@ outline: [
 
   {
     id: "books",
+    order: 8,
     guestbook: true,
     label: "The books under the lamp",
     tags: [],
-hitbox: [29.9, 48.4, 8.1, 4.1],
+hitbox: [30, 48.4, 8.1, 4.1],
 outline: [
-  [30.8, 49.6], [31.1, 49.4], [31.6, 48.9], [37.1, 49], [37.2, 49.1], [37.2, 49.2], [37.2, 49.9], [37.3, 49.8], [37.3, 50.4], [37.4, 50.3], [37.5, 50.4], [37.4, 50.5], [37.4, 51.2], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 51.9], [36.8, 52], [30.5, 51.9], [30.4, 51.8], [30.4, 51.3], [30.7, 51], [30.7, 50.3], [30.7, 50.2], [30.8, 50.2], [30.7, 50.1], [30.7, 49.9]
+  [30.8, 50.2], [30.8, 49.9], [30.8, 49.6], [31.1, 49.5], [31.6, 48.9], [31.6, 49.1], [31.6, 49.2], [31.7, 49.4], [31.9, 49.5], [32.4, 49.6], [32.9, 49.6], [33.7, 49.6], [34.2, 49.5], [34.6, 49.4], [34.8, 49.2], [34.9, 49.4], [35, 49.5], [36.4, 49.4], [36.6, 49.2], [36.7, 49], [37.1, 49], [37.3, 49.1], [37.2, 49.2], [37.2, 49.8], [37.3, 49.8], [37.3, 50.3], [37.5, 50.3], [37.5, 50.4], [37.5, 50.5], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 52], [36.6, 52], [30.5, 51.9], [30.5, 51.8], [30.5, 51.2], [30.7, 51], [30.7, 50.9], [30.6, 50.5], [30.7, 50.4]
 ]
   },
 
   {
     id: "coat",
-    order: 6,
+    order: 4,
     label: "The coat by the window",
     title: "Just Show Up",
     flavor:
@@ -208,8 +209,8 @@ outline: [
       "to you, you can put the kettle on for the next cup.",
     image: "assets/previews/tea.jpg",
     links: [
-      { label: "Buy me a tea",
-        url: "https://buymeacoffee.com/samarehjack" }   /* ← replace */
+      { label: "Support me",
+        url: "https://buymeacoffee.com/samarehjack" }   
     ],
     tags: [],
 hitbox: [47.7, 48.4, 4.4, 3.8],
@@ -220,7 +221,7 @@ outline: [
 
   {
     id: "pencil-holder",
-    order: 8,
+    order: 20,
     contact: true,
     label: "The pencil holder",
     tags: [],
@@ -270,14 +271,14 @@ const WELCOME_OPTIONS = [
       "An idea for AI built values-first, a way to find free things to " +
       "do nearby, and an app for deciding together. They're all here."
   },
-  {
+/*  {
     text: "I came for the music, leather creations, and writing",
     tags: ["creative"],
     response:
       "Singing, Bahá'í writings set to melodies, handmade shoes, ambigrams, " +
       "and books are on their way — that side of the room is still " +
       "being unpacked. Come back soon."
-  },
+  },*/
   {
     text: "Just wandering",
     wander: true,
