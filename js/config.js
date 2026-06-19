@@ -8,7 +8,8 @@
    [4] ABOUT            the about-me text (the desk chair)
    [5] CONTACT          the message form copy (the pencil holder)
    [6] GUESTBOOK        the guest book: prompt, thanks, and entries
-   [7] DOOR             door image geometry (only if you regenerate it)
+   [7] DIRECTORY        the plain-list index + its order
+   [8] DOOR             door image geometry (only if you regenerate it)
 
    ── Anatomy of an object ───────────────────────────────────────────────
    id       unique name, no spaces
@@ -28,6 +29,8 @@
    tags     which welcome answers make it shimmer: work, accompaniment,
             projects, creative — or "everyone" for all of them.
             An object can carry several tags.
+   order    OPTIONAL number — where this sits in the directory list
+            (lower = higher up). No `order` = falls to the end.
    hitbox   clickable rectangle, % of the image: [left, top, width, height]
    outline  the glowing shape, % polygon: [[x, y], [x, y], ...]
    shapes   OPTIONAL — for an object that shows in two (or more) separate
@@ -50,6 +53,7 @@ const ROOM_OBJECTS = [
   
   {
     id: "rug",
+    order: 5,
     label: "The rug",
     title: "Consensus",
     flavor:
@@ -73,7 +77,7 @@ outline: [
     id: "guest-chair",
     welcome: true,
     label: "The guest chair",
-    tags: ["everyone"],
+    tags: [],
 hitbox: [15.7, 52, 25.2, 33.3],
 outline: [
   [24.4, 84.6], [25.1, 84.8], [25.2, 83.9], [25.5, 82.9], [26.4, 79], [26.6, 77.2], [26.9, 76.3], [26.9, 76.1], [27, 75.9], [27.2, 74.8], [27.3, 74.5], [27.4, 74.5], [27.6, 74.5], [30.8, 73.2], [36.9, 70.6], [38.9, 79.7], [39.2, 79.6], [39.4, 79.5], [38.9, 75.5], [38.5, 72.9], [38.1, 70.3], [40.2, 69], [40.2, 68.2], [39.9, 67.8], [40.1, 67.6], [40.4, 67.1], [40.4, 66.2], [40.3, 64.9], [39.7, 64.5], [38.5, 63.8], [37.6, 63.4], [37.4, 61.7], [38.2, 61.5], [38.4, 61.2], [38.4, 60.6], [38.1, 60.3], [37.7, 60.3], [33.2, 61.8], [32.7, 61.7], [32.1, 61.7], [30.9, 61.9], [30.6, 62], [30.9, 58.6], [31, 58.1], [31.1, 57.7], [30.4, 57.6], [28.6, 58], [27.4, 56.2], [26.7, 55.6], [25.8, 55], [23.1, 53.7], [22, 53.2], [21.7, 53.2], [21.7, 53.9], [18.9, 53], [18.1, 52.7], [17.6, 52.5], [17.1, 52.6], [16.3, 53.2], [16.2, 53.3], [17.8, 61.9], [19.4, 69.8], [19.4, 70.1], [20.1, 70.9], [20.7, 71.4], [20.1, 74.5], [19.2, 79.8], [19.8, 80], [20.5, 77.3], [20.7, 76.4], [21.2, 73.8], [21.5, 72.9], [21.6, 72.4], [25.6, 74.5], [26, 74.5], [25.6, 76.8], [25.7, 77.1], [25.5, 77.4], [25.3, 78.6], [25.4, 78.7], [25.3, 78.8], [24.9, 81.1], [25.2, 81.3], [24.9, 81.4], [24.8, 82.3], [24.8, 82.6], [24.7, 82.7], [24.5, 83.7]
@@ -82,6 +86,7 @@ outline: [
 
   {
     id: "computer",
+    order: 2,
     label: "The computer",
     title: "My professional work",
     flavor:
@@ -93,8 +98,6 @@ outline: [
         url: "assets/resume.pdf", embed: true },
       { label: "Open my LinkedIn",
         url: "https://www.linkedin.com/in/samareh-jack-5b1713a/" }
-        /* ↑ found by search — confirm this is yours. LinkedIn blocks
-           framing, so this one opens in a new tab. */
     ],
     tags: ["work"],
 hitbox: [54.7, 37.3, 9.7, 15],
@@ -105,6 +108,7 @@ outline: [
 
   {
     id: "couch",
+    order: 3,
     label: "The couch",
     title: "Professional Accompaniment",
     flavor:
@@ -123,20 +127,10 @@ outline: [
   [83.7, 48.9], [84.9, 48.8], [85.6, 48.9], [90, 50.5], [91.7, 51.4], [99.9, 55.4], [99.8, 89.5], [83.5, 90.1], [82.5, 94.9], [81.4, 94.9], [80.9, 94.1], [80.6, 89.4], [68.9, 70.1], [68.6, 71.3], [68.3, 71.6], [67.9, 71.4], [67.7, 71], [67.7, 67.7], [67.2, 67.1], [67.3, 54.1], [67.4, 53.9], [67.5, 53.7], [68.5, 53.5], [76.1, 53.4], [76.7, 50.9], [76.8, 50], [77, 49.6], [77.6, 49.9], [78.8, 50.5], [80.4, 51], [81.6, 51.1], [82.6, 51], [83.1, 49.9]
 ]
   },
-
-  {
-    id: "books",
-    guestbook: true,
-    label: "The books under the lamp",
-    tags: ["everyone"],
-hitbox: [29.9, 48.4, 8.1, 4.1],
-outline: [
-  [30.8, 49.6], [31.1, 49.4], [31.6, 48.9], [37.1, 49], [37.2, 49.1], [37.2, 49.2], [37.2, 49.9], [37.3, 49.8], [37.3, 50.4], [37.4, 50.3], [37.5, 50.4], [37.4, 50.5], [37.4, 51.2], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 51.9], [36.8, 52], [30.5, 51.9], [30.4, 51.8], [30.4, 51.3], [30.7, 51], [30.7, 50.3], [30.7, 50.2], [30.8, 50.2], [30.7, 50.1], [30.7, 49.9]
-]
-  },
   
   {
     id: "desk-lamp",
+    order: 4,
     label: "The desk lamp",
     title: "Creedal AI",
     flavor:
@@ -157,7 +151,19 @@ outline: [
   },
 
   {
+    id: "books",
+    guestbook: true,
+    label: "The books under the lamp",
+    tags: [],
+hitbox: [29.9, 48.4, 8.1, 4.1],
+outline: [
+  [30.8, 49.6], [31.1, 49.4], [31.6, 48.9], [37.1, 49], [37.2, 49.1], [37.2, 49.2], [37.2, 49.9], [37.3, 49.8], [37.3, 50.4], [37.4, 50.3], [37.5, 50.4], [37.4, 50.5], [37.4, 51.2], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 51.9], [36.8, 52], [30.5, 51.9], [30.4, 51.8], [30.4, 51.3], [30.7, 51], [30.7, 50.3], [30.7, 50.2], [30.8, 50.2], [30.7, 50.1], [30.7, 49.9]
+]
+  },
+
+  {
     id: "coat",
+    order: 6,
     label: "The coat by the window",
     title: "Just Show Up",
     flavor:
@@ -176,17 +182,12 @@ outline: [
 ]
   },
 
-  /* ── These three open special panels instead of an examine card:
-       `about` → the about-me flow, `contact` → the message form,
-       `guestbook` → the guest book. Their copy lives in the ABOUT,
-       CONTACT and GUESTBOOK blocks below.
-       ⚠ The hitbox/outline values here are ROUGH PLACEHOLDERS so they're
-       clickable now — re-trace each one with ?edit for a clean glow. */
   {
     id: "desk-chair",
+    order: 1,
     about: true,
     label: "The desk chair",
-    tags: ["everyone"],
+    tags: [],
 shapes: [ { hitbox: [40.8, 56, 13.6, 11.5],
 outline: [
   [42.9, 66.5], [43.1, 66.8], [43.5, 66.7], [43.6, 66.5], [43.6, 66.1], [43.5, 65.9], [43.5, 65.7], [43.5, 65.7], [44.8, 65.1], [46.3, 64.4], [47.1, 64], [47.4, 64], [48.1, 64.5], [49.2, 65.2], [49.9, 65.8], [50.4, 66.1], [50.3, 66.2], [50.2, 66.7], [50.3, 67], [50.6, 67.1], [50.8, 66.9], [51, 66.7], [51, 66.2], [50.8, 66.2], [50.8, 65.4], [49.4, 63.8], [51, 63.8], [52.9, 63.8], [52.9, 63.9], [52.9, 64.1], [52.8, 64.3], [52.9, 64.6], [53, 64.7], [53.2, 64.8], [53.4, 64.8], [53.4, 64.5], [53.5, 64.4], [53.5, 64.2], [53.3, 64.1], [53.3, 63.1], [51.1, 62.7], [49.5, 62.5], [48.2, 62.4], [47.9, 62.3], [47.8, 61.9], [47.9, 61.7], [47.9, 61.2], [47.9, 60.9], [47.9, 60.6], [48.2, 60.6], [49.8, 59.9], [52, 59.6], [53.8, 59], [53.9, 56.5], [41.7, 56.5], [41.4, 57], [41.4, 57.2], [41.5, 57.3], [41.4, 57.6], [41.3, 57.9], [41.3, 58.3], [41.5, 58.6], [41.8, 59], [42, 59.3], [42.1, 59.4], [42.8, 59.6], [43.9, 59.7], [45.1, 59.9], [45.1, 59.9], [44.9, 60], [44.9, 60.2], [45, 60.3], [45, 60.5], [45.1, 60.3], [45.7, 60.5], [46.2, 60.5], [46.7, 60.6], [46.9, 60.6], [46.9, 60.8], [46.9, 60.9], [47, 61.1], [47.1, 61.9], [47, 61.9], [47, 62.2], [41.9, 62.7], [41.9, 63.2], [41.9, 63.6], [41.8, 63.8], [41.9, 64], [41.9, 64.1], [42.1, 64.3], [42.3, 64.3], [42.3, 64.3], [42.5, 64.1], [42.5, 63.9], [42.5, 63.8], [42.4, 63.7], [42.4, 63.4], [44.9, 63.7], [43, 65.1], [42.9, 65.1], [43, 65.8], [43, 65.9], [42.8, 66], [42.8, 66.3]
@@ -199,6 +200,7 @@ outline: [
 
   {
     id: "hibiscus-tea",
+    order: 7,
     label: "The hibiscus tea",
     title: "Buy me a tea",
     flavor:
@@ -209,18 +211,19 @@ outline: [
       { label: "Buy me a tea",
         url: "https://buymeacoffee.com/samarehjack" }   /* ← replace */
     ],
-    tags: ["everyone"],
+    tags: [],
 hitbox: [47.7, 48.4, 4.4, 3.8],
 outline: [
-  [48.7, 50.8], [48.3, 50.3], [48.2, 49.9], [48.4, 49.5], [48.7, 49.5], [48.8, 49.1], [49.1, 48.9], [50.3, 48.9], [50.8, 49], [50.9, 49.2], [50.9, 49.6], [50.7, 50.7], [51.4, 50.8], [51.6, 51], [51.5, 51.2], [50.9, 51.6], [48.8, 51.7], [48.2, 51.2], [48.2, 51], [48.7, 50.9]
+  [48.2, 51], [48.3, 50.9], [48.5, 50.9], [48.8, 50.8], [48.7, 50.7], [48.5, 50.6], [48.4, 50.5], [48.3, 50.2], [48.2, 49.9], [48.2, 49.6], [48.4, 49.5], [48.5, 49.5], [48.6, 49.5], [48.8, 49.5], [48.7, 49.1], [49, 49], [49.2, 49], [49.4, 48.9], [49.7, 48.9], [50.1, 48.9], [50.4, 48.9], [50.7, 49], [50.9, 49.1], [50.9, 49.2], [50.9, 49.6], [50.9, 49.7], [50.9, 50.2], [50.8, 50.5], [50.7, 50.7], [51, 50.7], [51.3, 50.8], [51.5, 50.9], [51.6, 51], [51.5, 51.2], [51.3, 51.4], [51, 51.5], [50.9, 51.6], [50.9, 51.7], [48.9, 51.8], [48.9, 51.7], [48.7, 51.5], [48.5, 51.3], [48.3, 51.2]
 ]
   },
 
   {
     id: "pencil-holder",
+    order: 8,
     contact: true,
     label: "The pencil holder",
-    tags: ["everyone"],
+    tags: [],
 hitbox: [37.1, 46, 4.1, 6.3],
 outline: [
   [38.2, 51.8], [39, 51.8], [39.7, 51.8], [40, 51.7], [40.1, 51.2], [40.3, 51.1], [40.6, 50.7], [40.8, 50.2], [40.8, 49.8], [40.7, 49.6], [40.5, 49.3], [40.1, 49.2], [40, 49.1], [39.8, 49], [40.1, 48.5], [40.3, 47.7], [40.3, 47.6], [40.2, 47.5], [40, 47.3], [40, 47.3], [39.8, 47.3], [39.8, 47.1], [39.6, 47.1], [39.4, 47.6], [39.2, 47.6], [39.1, 47.3], [38.9, 47.6], [38.9, 48], [38.4, 46.5], [38.2, 46.6], [38.4, 47.9], [38, 47.7], [38, 47], [37.8, 47], [37.8, 47.2], [37.6, 47.3], [37.7, 47.7], [37.8, 47.9], [37.9, 48.1], [38.2, 48.9], [38.1, 48.9]
@@ -385,7 +388,19 @@ const GUESTBOOK = {
    you can tell them apart in your inbox. */
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/mnjzeodj";
 
-/* [7] ─── DOOR GEOMETRY ────────────────────────────────────────────────
+/* [7] ─── DIRECTORY ─────────────────────────────────────────────────────
+   The plain-list index, reached from the list button (bottom-right) and,
+   later, a keyboard "skip to the list" link. The ORDER of the list is set
+   per object, by the `order` number on each ROOM_OBJECTS entry above (low
+   numbers first). Objects without an `order` fall to the end; the welcome
+   chair is never listed. This block is just the heading copy. */
+const DIRECTORY = {
+  eyebrow: "The directory",
+  title: "Everything in this room",
+  intro: "Prefer a plain list? Here's all of it, in one place."
+};
+
+/* [8] ─── DOOR GEOMETRY ────────────────────────────────────────────────
    Only changes if you regenerate the door image (assets/door.jpg,
    currently 1536 × 2752). All values are % of that image.
      leaf  = the door panel that swings. Match it to the painted leaf's

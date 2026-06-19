@@ -106,6 +106,14 @@
   var guestbookDoneClose = document.getElementById("guestbook-done-close");
   var guestbookCard = guestbookBackdrop.querySelector(".card");
 
+  var directoryOpen = document.getElementById("directory-open");
+  var directoryBackdrop = document.getElementById("directory-backdrop");
+  var directoryEyebrow = document.getElementById("directory-eyebrow");
+  var directoryTitle = document.getElementById("directory-title");
+  var directoryIntro = document.getElementById("directory-intro");
+  var directoryList = document.getElementById("directory-list");
+  var directoryClose = document.getElementById("directory-close");
+
   /* State lives in memory only, so every page load is a fresh visit:
      the door plays each time, and the shimmer resets — something you
      clicked on a previous visit shimmers again until you click it THIS
@@ -205,9 +213,10 @@
      apply to visitors who picked a matching answer. */
   function isRelevant(obj, choice) {
     if (!choice) return false;
-    if (obj.tags.indexOf("everyone") !== -1) return true;
+    var tags = obj.tags || [];            /* no tags = never shimmers */
+    if (tags.indexOf("everyone") !== -1) return true;
     if (choice.wander) return false;
-    return obj.tags.some(function (t) { return choice.tags.indexOf(t) !== -1; });
+    return tags.some(function (t) { return choice.tags.indexOf(t) !== -1; });
   }
 
   /* Put every object into its correct resting state. Safe to call
@@ -297,6 +306,7 @@
      exactly as it was — never the door, never the examine card (which the
      link click already closed). */
   function openWrapper(url, title) {
+    lastFocus = document.activeElement;        /* so we return where we came from */
     wrapperTitle.textContent = title || "";
     wrapperNewtab.href = url;
     wrapperFrame.src = url;
@@ -307,7 +317,9 @@
     if (siteWrapper.hidden) return;
     siteWrapper.hidden = true;
     wrapperFrame.src = "about:blank";          /* stop the embedded page */
-    if (!lookAround.hidden) lookAround.focus();
+    /* Back to wherever it opened from — a room hotspot, or the directory. */
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    else if (!lookAround.hidden) lookAround.focus();
   }
   wrapperBack.addEventListener("click", closeWrapper);
   /* Clicking the dimmed office around the panel also returns to the room. */
@@ -589,6 +601,95 @@
   guestbookClose.addEventListener("click", function () { closeModal(guestbookBackdrop); });
   guestbookDoneClose.addEventListener("click", function () { closeModal(guestbookBackdrop); });
 
+  /* ─── DIRECTORY (the plain-list index / hub) ─────────────────────────
+     Built from DIRECTORY.order (your chosen order), then any non-welcome
+     object you didn't list, so nothing goes missing. Each row shows the
+     object's title and its link(s): external links open out, in-room ones
+     (about / contact / guest book) open their panel OVER the directory and
+     return here on close. */
+  function directoryObjects() {
+    /* Non-welcome objects, sorted by each object's `order` number. Objects
+       without an `order` fall to the end, keeping their ROOM_OBJECTS order. */
+    return ROOM_OBJECTS
+      .filter(function (o) { return !o.welcome; })
+      .map(function (o, i) {
+        return { o: o, i: i, k: (typeof o.order === "number" ? o.order : Infinity) };
+      })
+      .sort(function (a, b) { return (a.k - b.k) || (a.i - b.i); })
+      .map(function (x) { return x.o; });
+  }
+
+  function makeDirLink(label, arrow, onClick, href) {
+    var el;
+    if (href) {                         /* a real navigation → a real <a> */
+      el = document.createElement("a");
+      el.href = href;
+      el.target = "_blank";
+      el.rel = "noopener";
+    } else {
+      el = document.createElement("button");
+      el.type = "button";
+      el.addEventListener("click", onClick);
+    }
+    el.className = "dir-link";
+    el.textContent = label + " " + arrow;
+    return el;
+  }
+
+  function renderDirectory() {
+    directoryEyebrow.textContent = DIRECTORY.eyebrow;
+    directoryTitle.textContent = DIRECTORY.title;
+    directoryIntro.textContent = DIRECTORY.intro;
+    directoryList.innerHTML = "";
+
+    directoryObjects().forEach(function (obj) {
+      var row = document.createElement("div");
+      row.className = "dir-row";
+      var name = document.createElement("span");
+      name.className = "dir-name";
+      name.textContent =
+        obj.about ? "About me" :
+        obj.contact ? "Contact" :
+        obj.guestbook ? "Guest book" :
+        (obj.title || obj.label);
+      row.appendChild(name);
+
+      if (obj.links && obj.links.length) {
+        obj.links.forEach(function (link) {
+          if (!link.url) return;
+          if (link.embed) {
+            row.appendChild(makeDirLink(link.label, "→", function () {
+              openWrapper(link.url, obj.title || obj.label);
+            }));
+          } else {
+            row.appendChild(makeDirLink(link.label, "↗", null, link.url));
+          }
+        });
+      } else if (obj.about) {
+        row.appendChild(makeDirLink(ABOUT.readMore || "Read about me", "→",
+          function () { openAbout(obj); }));
+      } else if (obj.contact) {
+        row.appendChild(makeDirLink("Get in touch", "→",
+          function () { openContact(obj); }));
+      } else if (obj.guestbook) {
+        row.appendChild(makeDirLink(GUESTBOOK.signLabel || "Sign the guest book", "→",
+          function () { openGuestbook(obj); }));
+      }
+      directoryList.appendChild(row);
+    });
+  }
+  renderDirectory();
+
+  function openDirectory() {
+    lastFocus = document.activeElement;
+    directoryBackdrop.hidden = false;
+    directoryBackdrop.querySelector(".card").scrollTop = 0;
+    var first = directoryList.querySelector(".dir-link");
+    (first || directoryClose).focus({ preventScroll: true });
+  }
+  directoryOpen.addEventListener("click", openDirectory);
+  directoryClose.addEventListener("click", function () { closeModal(directoryBackdrop); });
+
   /* [6] ─── MODAL PLUMBING ────────────────────────────────────────────── */
 
   function closeModal(backdrop) {
@@ -599,7 +700,7 @@
   /* Click outside a card closes it (and still settles the welcome
      if an answer was chosen). */
   [examineBackdrop, welcomeBackdrop, whyBackdrop,
-   aboutBackdrop, contactBackdrop, guestbookBackdrop].forEach(function (bd) {
+   aboutBackdrop, contactBackdrop, guestbookBackdrop, directoryBackdrop].forEach(function (bd) {
     bd.addEventListener("click", function (e) {
       if (e.target !== bd) return;
       var choseWelcome =
@@ -619,6 +720,7 @@
     else if (!aboutBackdrop.hidden) closeModal(aboutBackdrop);
     else if (!contactBackdrop.hidden) closeModal(contactBackdrop);
     else if (!guestbookBackdrop.hidden) closeModal(guestbookBackdrop);
+    else if (!directoryBackdrop.hidden) closeModal(directoryBackdrop);
     else if (!welcomeBackdrop.hidden) {
       var chose = welcomeSeen() && !welcomeActions.hidden;
       closeModal(welcomeBackdrop);
@@ -834,8 +936,14 @@
   }
 
   function finishEntry() {
+    viewport.removeAttribute("inert");   /* the room is interactive now */
     lookAround.hidden = false;
-    requestAnimationFrame(function () { lookAround.classList.add("shown"); });
+    directoryOpen.hidden = false;
+    requestAnimationFrame(function () {
+      lookAround.classList.add("shown");
+      directoryOpen.classList.add("shown");
+    });
+    lookAround.focus();                  /* move focus off the (hidden) door */
   }
 
   function beginEntrance() {
@@ -895,6 +1003,11 @@
     applyStandingState();
     layoutDoor();                  /* the door greets every visit */
     centerScroll(0);
+    /* The room sits behind the door: make it non-interactive so a keyboard
+       visitor can't tab to (or activate) hotspots through the closed door,
+       and focus the door so Enter/Space opens it on arrival. */
+    viewport.setAttribute("inert", "");
+    doorOverlay.focus();
   }
 
   window.addEventListener("resize", function () {

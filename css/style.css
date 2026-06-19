@@ -259,7 +259,7 @@ html, body {
 
 .glow-wrap.beckon  { animation: pulse 2.6s ease-in-out infinite; }
 .glow-wrap.reveal  { animation: pulse 1.7s ease-in-out 2; }
-.glow-wrap.shimmer { animation: shimmer 3.4s ease-in-out infinite; }
+.glow-wrap.shimmer { animation: shimmer 3.0s ease-in-out infinite; }
 
 /* Hover/focus highlight — must come after the animation states so it wins
    the cascade when both classes are present. */
@@ -269,9 +269,9 @@ html, body {
   0%, 100% { opacity: 0; }
   50% { opacity: 0.85; }
 }
-@keyframes shimmer {            /* same shape as pulse, much quieter */
-  0%, 100% { opacity: 0; }
-  50% { opacity: 0.30; }
+@keyframes shimmer {            /* a standing glow that never fully fades */
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.58; }
 }
 
 /* [6] ─── LOOK-AROUND BUTTON ──────────────────────────────────────────── */
@@ -297,6 +297,63 @@ html, body {
 #look-around.shown { opacity: 0.85; }
 #look-around:hover { opacity: 1; background: rgba(48, 34, 20, 0.8); transform: scale(1.06); }
 #look-around:focus-visible { outline: 2px dashed var(--glow); outline-offset: 3px; }
+
+/* The directory button sits just left of the eye, same treatment. */
+#directory-open {
+  position: fixed;
+  right: calc(max(1rem, env(safe-area-inset-right)) + 3.5rem);
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 20;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(36, 26, 16, 0.62);
+  color: var(--glow);
+  border: 1px solid rgba(184, 137, 59, 0.7);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.15s ease, background 0.15s ease;
+}
+#directory-open[hidden] { display: none; }
+#directory-open.shown { opacity: 0.85; }
+#directory-open:hover { opacity: 1; background: rgba(48, 34, 20, 0.8); transform: scale(1.06); }
+#directory-open:focus-visible { outline: 2px dashed var(--glow); outline-offset: 3px; }
+
+/* The directory modal is the hub — it sits BELOW the other cards so panels
+   opened from it layer on top, and closing them returns here. */
+#directory-backdrop { z-index: 58; }
+#directory-list { margin-bottom: 0.6rem; }
+.dir-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--parchment-edge);
+}
+.dir-row:first-child { border-top: 0; }
+.dir-name {
+  flex: 1 1 140px;
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  color: var(--walnut);
+}
+.dir-link {
+  font-family: var(--font-utility);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  color: var(--hibiscus);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.dir-link:hover { text-decoration: underline; }
 
 /* [7] ─── CARDS ────────────────────────────────────────────────────────
    Examine cards and the welcome card share these styles. */
@@ -676,6 +733,7 @@ html, body {
    Open index.html?edit to trace hotspots. See js/editor.js.          */
 body.editing .hitbox { pointer-events: none; }   /* clicks land on the room */
 body.editing #look-around { display: none; }
+body.editing #directory-open { display: none; }
 /* A reticle cursor whose centre is a precise dot — that dot (the cursor's
    hotspot at 14,14) marks exactly where a click drops a point. */
 body.editing #room { cursor: url("../assets/edit-cursor.svg") 14 14, crosshair; }
@@ -753,7 +811,7 @@ body.editing #room { cursor: url("../assets/edit-cursor.svg") 14 14, crosshair; 
   #room.stepping { transition: none; }
   .glow-wrap.beckon { animation: none; opacity: 0.7; }
   .glow-wrap.reveal { animation: none; }
-  .glow-wrap.shimmer { animation: none; opacity: 0.28; }
+  .glow-wrap.shimmer { animation: none; opacity: 0.5; }
   .card { animation: none; }
 }
 @keyframes door-fade-only {

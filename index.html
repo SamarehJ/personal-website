@@ -36,6 +36,17 @@
 </button>
 
 <!-- ════════════════════════════════════════════════════════════════════
+     DIRECTORY BUTTON — opens the plain-list index of everything.
+     ════════════════════════════════════════════════════════════════════ -->
+<button id="directory-open" hidden aria-label="See everything in the room as a list" title="See it as a list">
+  <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+       stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M8 6h13M8 12h13M8 18h13"/>
+    <circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>
+  </svg>
+</button>
+
+<!-- ════════════════════════════════════════════════════════════════════
      THE DOOR — entrance overlay.
 
      #door-zoom holds the full hallway photo and does the walk-up
@@ -194,6 +205,22 @@
     <p class="form-status" id="guestbook-thanks" hidden></p>
     <div class="card-actions" id="guestbook-done-actions" hidden>
       <button type="button" class="btn btn-quiet" id="guestbook-done-close">Keep looking around</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     DIRECTORY — the plain-list index. A hub: panels layer over it and
+     closing them returns here. Sits below the other cards (z-index).
+     ════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="directory-backdrop" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="directory-title">
+    <p class="eyebrow" id="directory-eyebrow"></p>
+    <h2 id="directory-title"></h2>
+    <p class="card-body" id="directory-intro"></p>
+    <div id="directory-list"></div>
+    <div class="card-actions">
+      <button type="button" class="btn btn-quiet" id="directory-close">Keep looking around</button>
     </div>
   </div>
 </div>
