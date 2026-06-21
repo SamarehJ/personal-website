@@ -22,6 +22,7 @@
 
   var SVG_NS = "http://www.w3.org/2000/svg";
   var room = document.getElementById("room");
+  var viewport = document.getElementById("viewport");
   var points = [];                 /* the shape being traced, [[x,y], ...] in % */
 
   document.body.classList.add("editing");
@@ -60,42 +61,21 @@
   var pointsGroup = document.createElementNS(SVG_NS, "g");
   svg.appendChild(pointsGroup);
 
-  /* ── Live reticle ───────────────────────────────────────────────────
-     The OS cursor is hidden over the room (see style.css). We draw our own
-     crosshair, placed with the SAME math the click handler uses — so the
-     mark sits exactly where the next point will land, with no hotspot drift
-     from custom-cursor scaling on HiDPI displays.
-
-     A plain HTML element (not SVG) so the crosshair is a fixed pixel size
-     and the exact aim point is the bare intersection of two thin arms — no
-     fill over it. Its color (white, dark halo) is neither the hibiscus of
-     the shape you're tracing nor the gold of existing hotspots, so it never
-     blends into either. */
-  var reticle = document.createElement("div");
-  reticle.id = "ed-reticle";
-  reticle.style.display = "none";
-  room.appendChild(reticle);
-
-  function moveReticle(clientX, clientY) {
-    var rect = room.getBoundingClientRect();
-    reticle.style.left = ((clientX - rect.left) / rect.width) * 100 + "%";
-    reticle.style.top = ((clientY - rect.top) / rect.height) * 100 + "%";
-    reticle.style.display = "";
-  }
-  room.addEventListener("mousemove", function (e) { moveReticle(e.clientX, e.clientY); });
-  room.addEventListener("mouseleave", function () { reticle.style.display = "none"; });
-
   function redraw() {
     currentPoly.setAttribute("points",
       points.map(function (p) { return p[0] + "," + p[1]; }).join(" "));
     pointsGroup.innerHTML = "";
+    /* Dots are sized to a fixed pixel radius (converted into the SVG's
+       0–100 space), so they stay a tiny constant size on screen no matter
+       how far you've zoomed in — never covering the edge you're tracing. */
+    var rPx = 1.1;
     points.forEach(function (p) {
       var c = document.createElementNS(SVG_NS, "ellipse");
       c.setAttribute("class", "pt");
       c.setAttribute("cx", p[0]);
       c.setAttribute("cy", p[1]);
-      c.setAttribute("rx", 0.045);
-      c.setAttribute("ry", 0.045 * (room.offsetWidth / room.offsetHeight));
+      c.setAttribute("rx", rPx * 100 / room.offsetWidth);
+      c.setAttribute("ry", rPx * 100 / room.offsetHeight);
       pointsGroup.appendChild(c);
     });
     countEl.textContent = points.length + (points.length === 1 ? " point" : " points");
@@ -168,13 +148,19 @@
   panel.id = "editor-panel";
   panel.innerHTML =
     '<h3 id="ed-drag" title="Drag to move this panel">Hotspot editor <span class="ed-grip">⠿</span></h3>' +
-    '<p>Click around an object\u2019s edge to trace it. Drag the room to pan, ' +
-    'or drag this panel\u2019s title bar to move it out of the way. ' +
-    'Gold shapes are hotspots that already exist.</p>' +
+    '<p>Click around an object\u2019s edge to trace it. Drag or scroll to pan, ' +
+    'pinch or \u2318/Ctrl-scroll to zoom in close. Drag this panel\u2019s title ' +
+    'bar to move it. Gold shapes are hotspots that already exist.</p>' +
     '<div class="row">' +
     '  <button id="ed-undo">Undo point</button>' +
     '  <button id="ed-clear">Clear</button>' +
     '  <button id="ed-copy">Copy config</button>' +
+    '</div>' +
+    '<div class="row" id="ed-zoom-row">' +
+    '  <button id="ed-zoom-out" title="Zoom out">\u2212</button>' +
+    '  <span id="ed-zoom-label">100%</span>' +
+    '  <button id="ed-zoom-in" title="Zoom in">+</button>' +
+    '  <button id="ed-zoom-reset">Reset</button>' +
     '</div>' +
     '<p id="ed-count">0 points</p>' +
     '<textarea id="ed-out" readonly spellcheck="false"></textarea>' +
@@ -239,6 +225,53 @@
   document.getElementById("ed-existing").addEventListener("change", function (e) {
     existingGroup.style.display = e.target.checked ? "" : "none";
   });
+
+  /* ── Zoom & pan ──────────────────────────────────────────────────────
+     The room is scaled by changing its layout width; the image, hotspots
+     and SVG overlay are all sized in % so they scale together and the click
+     math (which reads getBoundingClientRect) stays correct at any zoom.
+     Panning is the room's normal scroll — enabled on both axes in edit mode
+     (style.css) so you can reach the top and bottom edges too. */
+  var zoomLabel = document.getElementById("ed-zoom-label");
+  var zoom = 1, baseW = 0;
+  var MAX_ZOOM = 16;
+
+  function setZoom(target, cx, cy) {
+    target = Math.max(1, Math.min(MAX_ZOOM, target));
+    var rect = room.getBoundingClientRect();
+    if (!baseW) baseW = rect.width;            /* width at zoom 1 (first call) */
+    /* The image fraction currently under the zoom anchor (cursor or center). */
+    var fx = (cx - rect.left) / rect.width;
+    var fy = (cy - rect.top) / rect.height;
+    zoom = target;
+    room.style.width = (baseW * zoom) + "px";
+    /* After the resize, scroll so that same fraction sits back under the
+       anchor — so you zoom INTO the point you're pointing at. */
+    var nr = room.getBoundingClientRect();
+    viewport.scrollLeft += (nr.left + fx * nr.width) - cx;
+    viewport.scrollTop += (nr.top + fy * nr.height) - cy;
+    if (zoomLabel) zoomLabel.textContent = Math.round(zoom * 100) + "%";
+    redraw();                                  /* dots are sized from room width */
+  }
+
+  function zoomToCenter(factor) {
+    var r = viewport.getBoundingClientRect();
+    setZoom(zoom * factor, r.left + r.width / 2, r.top + r.height / 2);
+  }
+
+  /* Pinch (trackpad) and ⌘/Ctrl-scroll arrive as a wheel event with
+     ctrlKey set; we take it over so it zooms the room — far past what the
+     browser's own page-zoom allows — instead of the whole page. Plain
+     scroll is left alone, so it still pans. */
+  room.addEventListener("wheel", function (e) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    setZoom(zoom * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+  }, { passive: false });
+
+  document.getElementById("ed-zoom-in").addEventListener("click", function () { zoomToCenter(1.5); });
+  document.getElementById("ed-zoom-out").addEventListener("click", function () { zoomToCenter(1 / 1.5); });
+  document.getElementById("ed-zoom-reset").addEventListener("click", function () { zoomToCenter(1 / zoom); });
 
   redraw();
 })();

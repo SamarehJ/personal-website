@@ -156,9 +156,9 @@ outline: [
     guestbook: true,
     label: "The books under the lamp",
     tags: [],
-hitbox: [30, 48.4, 8.1, 4.1],
+hitbox: [29.9, 48.4, 8.1, 4.1],
 outline: [
-  [30.8, 50.2], [30.8, 49.9], [30.8, 49.6], [31.1, 49.5], [31.6, 48.9], [31.6, 49.1], [31.6, 49.2], [31.7, 49.4], [31.9, 49.5], [32.4, 49.6], [32.9, 49.6], [33.7, 49.6], [34.2, 49.5], [34.6, 49.4], [34.8, 49.2], [34.9, 49.4], [35, 49.5], [36.4, 49.4], [36.6, 49.2], [36.7, 49], [37.1, 49], [37.3, 49.1], [37.2, 49.2], [37.2, 49.8], [37.3, 49.8], [37.3, 50.3], [37.5, 50.3], [37.5, 50.4], [37.5, 50.5], [37.5, 51.2], [37.5, 51.2], [37.3, 51.5], [36.9, 52], [36.6, 52], [30.5, 51.9], [30.5, 51.8], [30.5, 51.2], [30.7, 51], [30.7, 50.9], [30.6, 50.5], [30.7, 50.4]
+  [30.4, 51.9], [30.4, 51.2], [30.6, 50.9], [30.6, 50.3], [30.8, 50.2], [30.8, 49.6], [31.1, 49.4], [31.5, 49], [31.6, 48.9], [31.6, 49.2], [31.6, 49.4], [31.9, 49.5], [32.4, 49.6], [33, 49.6], [33.7, 49.6], [34.1, 49.5], [34.4, 49.5], [34.6, 49.3], [34.7, 49.4], [34.8, 49.5], [35.6, 49.6], [36.4, 49.5], [36.4, 49.3], [36.6, 49.2], [36.7, 49], [37.2, 49], [37.2, 49.8], [37.2, 49.8], [37.2, 50.3], [37.5, 50.3], [37.5, 51.2], [36.8, 52]
 ]
   },
 
@@ -378,9 +378,11 @@ const GUESTBOOK = {
     "them up myself, so yours should appear soon. Thanks again for " +
     "stopping by.",
   entries: [
-    /* Example entries — replace or delete these with real ones. */
-    { note: "Be the first to say you were here.",
-      name: "N/A", link: "" }
+    { note: "I always like the idea of creating something new with AI - like this website. I've heard good things about it. Good luck!",
+      name: "Abeo Jack (7 years old)", link: "" },
+      
+    { note: "I love you. Welcome to website and also I want to create with AI and also I like to draw on the computer and also I want to spin the whole house with one finger and also I really like to drink coconut water and also I really want to put some bit of blob of computer and then flush it down the toilet.",
+      name: "Zia Jack (4 years old)", link: "" }
   ]
 };
 

@@ -734,26 +734,18 @@ html, body {
 body.editing .hitbox { pointer-events: none; }   /* clicks land on the room */
 body.editing #look-around { display: none; }
 body.editing #directory-open { display: none; }
+/* Free panning on both axes while tracing, so the zoom can reach the top
+   and bottom edges of the room (the visitor view locks the vertical). */
+body.editing #viewport.inside { overflow: auto; }
 /* The OS cursor is hidden over the room; the editor draws its own reticle
    into #editor-svg (see js/editor.js), positioned with the exact click math
    so the dot can't drift from the click point the way a custom hardware
    cursor does when the browser scales it on HiDPI displays. */
-body.editing #room { cursor: none; }
-/* The reticle is the same artwork as the old hardware cursor
-   (assets/edit-cursor.svg) — gapped arms with a fine center dot. The only
-   change is that JS positions it from the exact click math, so it can't
-   drift from the click point the way a custom cursor's hotspot does when
-   the browser scales it on HiDPI displays. The 28×28 art centers its dot
-   at 14,14, so the negative margins land that dot on the aim point. */
-#ed-reticle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  z-index: 6;
-  pointer-events: none;
-  background: url("../assets/edit-cursor.svg") center / contain no-repeat;
-}
+/* The OS's built-in crosshair: its hotspot is the OS-defined exact center,
+   so a click lands precisely under it. A custom-image cursor can't guarantee
+   this — the browser mis-places the declared hotspot when it scales the
+   image on HiDPI displays — so we let the system draw the cursor. */
+body.editing #room { cursor: crosshair; }
 
 #editor-svg {
   position: absolute;
@@ -763,9 +755,12 @@ body.editing #room { cursor: none; }
   z-index: 5;
   pointer-events: none;
 }
-#editor-svg .existing { fill: rgba(255, 217, 138, 0.10); stroke: rgba(255, 217, 138, 0.55); stroke-width: 0.04; }
-#editor-svg .current  { fill: rgba(167, 60, 52, 0.18);  stroke: var(--hibiscus); stroke-width: 0.04; }
-#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.015; }
+/* vector-effect keeps strokes a fixed pixel width at every zoom level, so
+   the lines stay hairline-thin and never hide the edge you're tracing. The
+   fills are barely-there for the same reason. */
+#editor-svg .existing { fill: rgba(255, 217, 138, 0.06); stroke: rgba(255, 217, 138, 0.5); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
+#editor-svg .current  { fill: rgba(167, 60, 52, 0.07);  stroke: var(--hibiscus); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
+#editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.5; vector-effect: non-scaling-stroke; }
 
 #editor-panel {
   position: fixed;
@@ -817,6 +812,14 @@ body.editing #room { cursor: none; }
   resize: vertical;
 }
 #editor-panel label { display: flex; gap: 0.4em; align-items: center; font-size: 0.78rem; }
+#editor-panel #ed-zoom-row { align-items: center; }
+#editor-panel #ed-zoom-label {
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  min-width: 3.4em;
+  text-align: center;
+  color: var(--walnut);
+}
 
 /* [10] ─── REDUCED MOTION ─────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
