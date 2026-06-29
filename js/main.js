@@ -130,7 +130,20 @@
      For each object in config: an invisible button (the hitbox) and a
      glow layer (the room image clipped to the object's outline).      */
 
-  var glowWraps = {};   /* id → ARRAY of glow elements (one per shape) */
+  var glowWraps = {};     /* id → ARRAY of glow elements (one per shape) */
+  var iconEls = {};       /* id → the beckon-mote anchor, or null if no icon */
+  var titleEls = {};      /* id → the hover title above the object, or null   */
+
+  /* The short name the mote shows on hover. The in-room panels (about,
+     contact, guest book, welcome) have no visitor `title`, so give them the
+     same plain names the directory uses; everything else shows its title. */
+  function displayName(obj) {
+    if (obj.welcome) return "Take a seat";
+    if (obj.about) return "About me";
+    if (obj.contact) return "Contact";
+    if (obj.guestbook) return "Guest book";
+    return obj.title || obj.label || "";
+  }
 
   /* What a click on any of an object's parts does. */
   function activate(obj) {
@@ -142,9 +155,36 @@
   }
 
   /* Light (or unlight) every one of an object's parts together, so a
-     two-piece object — e.g. a chair split by the desk — responds as one. */
+     two-piece object — e.g. a chair split by the desk — responds as one.
+     The mote lights with them. */
   function setHover(id, on) {
     glowWraps[id].forEach(function (w) { w.classList.toggle("lit", on); });
+    if (iconEls[id]) iconEls[id].classList.toggle("lit", on);
+    if (titleEls[id]) titleEls[id].classList.toggle("lit", on);
+  }
+
+  /* Move an object's mote into a state, mirroring its glow. The mote's grow
+     envelope (css) scales it in from nothing and out to nothing on its own;
+     here we just carry the same class the glow gets, so their breaths start
+     together and stay in phase. `restart` forces a fresh start (the reveal
+     pulse); resting states leave the breath running so re-settling is calm. */
+  function setIconState(id, cls, restart) {
+    var icon = iconEls[id];
+    if (!icon) return;
+    icon.classList.remove("beckon", "reveal", "shimmer", "still");
+    if (restart) void icon.offsetWidth;
+    if (cls) icon.classList.add(cls);
+  }
+
+  /* The beckon mote is a "ring ping" — a dot ringed by a pulse that flies
+     outward. It draws in currentColor (the mote is gold). Its size (px) is
+     set by ICON_SIZE in config.js. */
+  var RING_PING_SVG =
+    '<svg viewBox="0 0 58 58">' +
+    '<circle class="ping-ring" cx="29" cy="29" r="9" fill="none" stroke="currentColor" stroke-width="2"/>' +
+    '<circle cx="29" cy="29" r="5.5" fill="currentColor"/></svg>';
+  if (typeof ICON_SIZE === "number" && ICON_SIZE > 0) {
+    document.documentElement.style.setProperty("--icon-size", ICON_SIZE + "px");
   }
 
   ROOM_OBJECTS.forEach(function (obj) {
@@ -174,15 +214,24 @@
       });
       hit.addEventListener("blur", function () { setHover(obj.id, false); });
 
-      var wrap = document.createElement("div");
-      wrap.className = "glow-wrap";
-      var glow = document.createElement("div");
-      glow.className = "glow-shape";
-      glow.style.clipPath =
+      /* Two clipped copies: the breath layer (standing pulse/shimmer) and a
+         steady hover layer that fades in over it, so hover never snaps. */
+      var clip =
         "polygon(" +
         s.outline.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(", ") +
         ")";
-      wrap.appendChild(glow);
+      var wrap = document.createElement("div");
+      wrap.className = "glow-wrap";
+      /* Each layer = the halo (filter, in css) + an opaque clipped copy. */
+      ["glow-breath", "glow-hover"].forEach(function (layerClass) {
+        var layer = document.createElement("div");
+        layer.className = layerClass;
+        var shape = document.createElement("div");
+        shape.className = "glow-shape";
+        shape.style.clipPath = clip;
+        layer.appendChild(shape);
+        wrap.appendChild(layer);
+      });
 
       room.appendChild(hit);
       room.appendChild(wrap);
@@ -190,6 +239,39 @@
     });
 
     glowWraps[obj.id] = wraps;
+
+    /* The beckon mote — anchor (the point) → grow (the envelope) → mote (the
+       light). Pointer-events are off (css) so clicks fall to the hitbox. */
+    var icon = null;
+    if (obj.icon) {
+      icon = document.createElement("div");
+      icon.className = "icon-anchor";
+      icon.style.left = obj.icon[0] + "%";
+      icon.style.top = obj.icon[1] + "%";
+      var grow = document.createElement("div");
+      grow.className = "icon-grow";
+      var mote = document.createElement("div");
+      mote.className = "icon-mote";
+      mote.innerHTML = RING_PING_SVG;
+      grow.appendChild(mote);
+      icon.appendChild(grow);
+      room.appendChild(icon);
+    }
+    iconEls[obj.id] = icon;
+
+    /* The hover title sits above the object itself — at the top-center of the
+       union of its hitbox(es), not over the mote (which may sit anywhere). */
+    var boxes = shapes.map(function (s) { return s.hitbox; });
+    var left = Math.min.apply(null, boxes.map(function (b) { return b[0]; }));
+    var right = Math.max.apply(null, boxes.map(function (b) { return b[0] + b[2]; }));
+    var top = Math.min.apply(null, boxes.map(function (b) { return b[1]; }));
+    var title = document.createElement("div");
+    title.className = "obj-title";
+    title.textContent = displayName(obj);
+    title.style.left = ((left + right) / 2) + "%";
+    title.style.top = top + "%";
+    room.appendChild(title);
+    titleEls[obj.id] = title;
   });
 
   /* [3] ─── HIGHLIGHT MODEL ────────────────────────────────────────────
@@ -201,10 +283,14 @@
      Hover/tap always works on everything, regardless of any of this. */
 
   function setState(id, cls) {
+    /* "still" lights the icon only (a frozen marker) — the glow stays off,
+       so the object itself doesn't glow. Every other state drives both. */
+    var glowCls = (cls === "still") ? null : cls;
     glowWraps[id].forEach(function (w) {
       w.classList.remove("beckon", "reveal", "shimmer");
-      if (cls) w.classList.add(cls);
+      if (glowCls) w.classList.add(glowCls);
     });
+    setIconState(id, cls, false);
   }
 
   /* Is this object relevant to the visitor's welcome answer?
@@ -219,16 +305,26 @@
     return tags.some(function (t) { return choice.tags.indexOf(t) !== -1; });
   }
 
+  /* The eye toggles this: when on, EVERYTHING clickable carries the gentle
+     glow, regardless of relevance or what's been examined. */
+  var revealAll = false;
+
   /* Put every object into its correct resting state. Safe to call
      any time; used after welcome, after examining, after pulses. */
   function applyStandingState() {
     var choice = visitorChoice();
     var seen = visited();
     ROOM_OBJECTS.forEach(function (obj) {
-      if (obj.welcome) {
-        setState(obj.id, welcomeSeen() ? null : "beckon");
-      } else if (isRelevant(obj, choice) && seen.indexOf(obj.id) === -1) {
+      /* Only the objects meant for this visitor oscillate (glow + breathing
+         mote). With the eye on, everything else clickable carries a frozen
+         icon and NO glow, so what's for them still stands apart. */
+      var forYou = isRelevant(obj, choice) && seen.indexOf(obj.id) === -1;
+      if (obj.welcome && !welcomeSeen()) {
+        setState(obj.id, "beckon");
+      } else if (forYou) {
         setState(obj.id, "shimmer");
+      } else if (revealAll) {
+        setState(obj.id, "still");
       } else {
         setState(obj.id, null);
       }
@@ -244,6 +340,7 @@
         void w.offsetWidth;             /* flush, so the animation restarts */
         w.classList.add("reveal");
       });
+      setIconState(id, "reveal", true); /* the mote pulses with the glow */
       wraps[0].addEventListener("animationend", function handler() {
         wraps[0].removeEventListener("animationend", handler);
         applyStandingState();
@@ -252,9 +349,16 @@
     if (reducedMotion) setTimeout(applyStandingState, 50);
   }
 
-  lookAround.addEventListener("click", function () {
-    pulseThenSettle(ROOM_OBJECTS.map(function (o) { return o.id; }));
-  });
+  /* The eye is an on/off switch for the gentle glow on everything clickable,
+     not a one-shot flash. */
+  function setRevealAll(on) {
+    revealAll = on;
+    lookAround.classList.toggle("is-on", on);
+    lookAround.setAttribute("aria-pressed", on ? "true" : "false");
+    applyStandingState();
+  }
+  lookAround.setAttribute("aria-pressed", "false");
+  lookAround.addEventListener("click", function () { setRevealAll(!revealAll); });
 
   /* [4] ─── EXAMINE CARD ──────────────────────────────────────────────── */
 
@@ -340,15 +444,22 @@
     WELCOME_OPTIONS.forEach(function (opt) {
       var b = document.createElement("button");
       b.textContent = opt.text;
-      b.addEventListener("click", function () { chooseOption(opt); });
+      b.addEventListener("click", function () { chooseOption(opt, b); });
       welcomeOptions.appendChild(b);
     });
 
     welcomeBackdrop.hidden = false;
   }
 
-  function chooseOption(opt) {
-    welcomeOptions.hidden = true;
+  function chooseOption(opt, btn) {
+    /* Keep the menu visible and mark the one they picked. The options stay
+       live, so the visitor can change their answer — picking another updates
+       the highlight and the response below. */
+    Array.prototype.forEach.call(welcomeOptions.children, function (b) {
+      var isSel = (b === btn);
+      b.classList.toggle("selected", isSel);
+      b.setAttribute("aria-pressed", isSel ? "true" : "false");
+    });
     welcomeTitle.textContent = "Glad you're here.";
     welcomeResponse.textContent = opt.response;
     welcomeResponse.hidden = false;
@@ -359,19 +470,19 @@
     state.choice = { tags: opt.tags, wander: !!opt.wander };
   }
 
-  /* After the card closes: chair stops beckoning; the visitor's
-     relevant objects (or everything, for a wanderer) pulse twice. */
+  /* After the card closes: the chair stops beckoning and the visitor's
+     relevant objects take up their standing shimmer straight away — no
+     announcing pulse first, so the mote and the glow start their breath
+     together and in phase. A wanderer has nothing that shimmers, so they
+     still get one gentle pass over everything as their only hint. */
   function settleAfterWelcome() {
     var choice = visitorChoice();
-    if (!choice) { applyStandingState(); return; }
-    var ids = ROOM_OBJECTS
-      .filter(function (o) {
-        if (o.welcome) return false;
-        return choice.wander || isRelevant(o, choice);
-      })
-      .map(function (o) { return o.id; });
     applyStandingState();
-    pulseThenSettle(ids);
+    if (choice && choice.wander) {
+      pulseThenSettle(ROOM_OBJECTS
+        .filter(function (o) { return !o.welcome; })
+        .map(function (o) { return o.id; }));
+    }
   }
 
   welcomeDone.addEventListener("click", function () {

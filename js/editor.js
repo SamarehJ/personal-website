@@ -61,6 +61,38 @@
   var pointsGroup = document.createElementNS(SVG_NS, "g");
   svg.appendChild(pointsGroup);
 
+  /* ── Icon points ────────────────────────────────────────────────────
+     A second mode: instead of tracing an outline, drop ONE point to mark
+     where an object's beckon-mote should sit. Existing `icon` points show
+     faint gold; the one you're placing shows bright cyan. */
+  var iconLayer = document.createElementNS(SVG_NS, "g");
+  svg.appendChild(iconLayer);
+  var mode = "outline";   /* "outline" | "icon" */
+  var iconPt = null;       /* the icon point being placed, [x, y] in % */
+
+  function iconMarker(x, y, cls) {
+    var g = document.createElementNS(SVG_NS, "g");
+    g.setAttribute("class", cls);
+    var rx = 1.7 * 100 / room.offsetWidth, ry = 1.7 * 100 / room.offsetHeight;
+    var ring = document.createElementNS(SVG_NS, "ellipse");
+    ring.setAttribute("cx", x); ring.setAttribute("cy", y);
+    ring.setAttribute("rx", rx); ring.setAttribute("ry", ry);
+    ring.setAttribute("fill", "none");
+    g.appendChild(ring);
+    var dot = document.createElementNS(SVG_NS, "ellipse");
+    dot.setAttribute("cx", x); dot.setAttribute("cy", y);
+    dot.setAttribute("rx", rx * 0.32); dot.setAttribute("ry", ry * 0.32);
+    g.appendChild(dot);
+    return g;
+  }
+  function drawIcons() {
+    iconLayer.innerHTML = "";
+    ROOM_OBJECTS.forEach(function (obj) {
+      if (obj.icon) iconLayer.appendChild(iconMarker(obj.icon[0], obj.icon[1], "existing-icon"));
+    });
+    if (iconPt) iconLayer.appendChild(iconMarker(iconPt[0], iconPt[1], "current-icon"));
+  }
+
   function redraw() {
     currentPoly.setAttribute("points",
       points.map(function (p) { return p[0] + "," + p[1]; }).join(" "));
@@ -78,8 +110,22 @@
       c.setAttribute("ry", rPx * 100 / room.offsetHeight);
       pointsGroup.appendChild(c);
     });
+    drawIcons();                       /* keep markers sized to the zoom */
+    if (mode === "icon") return;       /* the icon panel owns the readout */
     countEl.textContent = points.length + (points.length === 1 ? " point" : " points");
     output.value = points.length >= 3 ? snippet() : "(need at least 3 points)";
+  }
+
+  function iconSnippet() {
+    return "icon: [" + round1(iconPt[0]) + ", " + round1(iconPt[1]) + "]";
+  }
+  function setIconPoint(x, y) {
+    iconPt = [x, y];
+    drawIcons();
+    output.value = iconSnippet();
+    countEl.textContent = "icon point set — copied to clipboard";
+    if (navigator.clipboard) navigator.clipboard.writeText(output.value);
+    else { output.select(); document.execCommand("copy"); }
   }
 
   /* ── The generated config lines ─────────────────────────────────────── */
@@ -118,6 +164,7 @@
     var rect = room.getBoundingClientRect();
     var x = ((e.clientX - rect.left) / rect.width) * 100;
     var y = ((e.clientY - rect.top) / rect.height) * 100;
+    if (mode === "icon") { setIconPoint(x, y); return; }
     points.push([x, y]);
     redraw();
   });
@@ -135,10 +182,10 @@
     touchStart = null;
     if (moved > 8) return;
     var rect = room.getBoundingClientRect();
-    points.push([
-      ((t.clientX - rect.left) / rect.width) * 100,
-      ((t.clientY - rect.top) / rect.height) * 100
-    ]);
+    var x = ((t.clientX - rect.left) / rect.width) * 100;
+    var y = ((t.clientY - rect.top) / rect.height) * 100;
+    if (mode === "icon") { setIconPoint(x, y); return; }
+    points.push([x, y]);
     redraw();
   });
 
@@ -155,6 +202,9 @@
     '  <button id="ed-undo">Undo point</button>' +
     '  <button id="ed-clear">Clear</button>' +
     '  <button id="ed-copy">Copy config</button>' +
+    '</div>' +
+    '<div class="row">' +
+    '  <button id="ed-pick-icon">Pick icon point</button>' +
     '</div>' +
     '<div class="row" id="ed-zoom-row">' +
     '  <button id="ed-zoom-out" title="Zoom out">\u2212</button>' +
@@ -211,9 +261,11 @@
   });
 
   document.getElementById("ed-undo").addEventListener("click", function () {
+    if (mode === "icon") setMode("outline");
     points.pop(); redraw();
   });
   document.getElementById("ed-clear").addEventListener("click", function () {
+    if (mode === "icon") setMode("outline");
     points = []; redraw();
   });
   document.getElementById("ed-copy").addEventListener("click", function () {
@@ -224,6 +276,22 @@
   });
   document.getElementById("ed-existing").addEventListener("change", function (e) {
     existingGroup.style.display = e.target.checked ? "" : "none";
+  });
+
+  var pickBtn = document.getElementById("ed-pick-icon");
+  function setMode(next) {
+    mode = next;
+    pickBtn.textContent = (mode === "icon") ? "Done picking" : "Pick icon point";
+    document.body.classList.toggle("picking-icon", mode === "icon");
+    if (mode === "icon") {
+      countEl.textContent = "click where the mote should sit";
+      output.value = iconPt ? iconSnippet() : "(click a point in the room)";
+    } else {
+      redraw();
+    }
+  }
+  pickBtn.addEventListener("click", function () {
+    setMode(mode === "icon" ? "outline" : "icon");
   });
 
   /* ── Zoom & pan ──────────────────────────────────────────────────────

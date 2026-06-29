@@ -241,8 +241,19 @@ html, body {
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+}
+/* Two independent layers, each a self-contained glow: its OWN gold halo
+   (drop-shadow) cast from an OPAQUE copy of the photo clipped to the
+   outline. Because the copy is fully opaque, it always covers its own
+   shadow INSIDE the outline — so no matter the layer's opacity, the only
+   glow is the halo OUTSIDE. We fade the LAYER (not the shape), so the whole
+   halo breathes/brightens without ever leaking inside.
+     BREATH layer — carries the standing pulse / shimmer.
+     HOVER layer  — fades in over it on hover and out again (no snap). */
+.glow-breath,
+.glow-hover {
+  position: absolute;
+  inset: 0;
   filter:
     drop-shadow(0 0 6px var(--glow))
     drop-shadow(0 0 18px rgba(255, 217, 138, 0.75))
@@ -253,26 +264,111 @@ html, body {
   inset: 0;
   background-image: url("../assets/office.jpg");
   background-size: 100% 100%;
-  /* clip-path polygon comes from config */
-  filter: brightness(1.12) saturate(1.05);
+  /* clip-path polygon comes from config; opaque, so it hides its own shadow
+     inside the outline — leaving only the halo outside. */
 }
+.glow-breath { opacity: 0; }
+.glow-hover  { opacity: 0; transition: opacity 0.45s ease-in-out; }
 
-.glow-wrap.beckon  { animation: pulse 2.6s ease-in-out infinite; }
-.glow-wrap.reveal  { animation: pulse 1.7s ease-in-out 2; }
-.glow-wrap.shimmer { animation: shimmer 3.0s ease-in-out infinite; }
+.glow-wrap.beckon  .glow-breath { animation: pulse 2.6s ease-in-out infinite; }
+.glow-wrap.reveal  .glow-breath { animation: glow-reveal 1.7s ease-in-out 2; }
+.glow-wrap.shimmer .glow-breath { animation: shimmer 3.0s ease-in-out infinite; }
+.glow-wrap.lit     .glow-hover  { opacity: 1; }
 
-/* Hover/focus highlight — must come after the animation states so it wins
-   the cascade when both classes are present. */
-.glow-wrap.lit { opacity: 1; animation: none; }
-
+/* Standing oscillations are BRIGHTEST at the cycle ends, matching the mote's
+   breath (which is at full size there) — so glow and icon swell and fade
+   together, in phase, instead of opposite. */
 @keyframes pulse {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 0.85; }
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 0; }
 }
 @keyframes shimmer {
-  0%, 100% { opacity: 0.06; }
-  50% { opacity: 0.80; }
+  0%, 100% { opacity: 0.80; }
+  50%      { opacity: 0.06; }
 }
+/* The wander flash starts and ends dark (peaks mid-cycle), so it fades out
+   cleanly when it settles to nothing. */
+@keyframes glow-reveal {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.85; }
+}
+
+/* ── THE BECKON MOTE (ring ping) ───────────────────────────────────────
+   A dot ringed by a sonar "ping" at each object's `icon:[x,y]`.
+     .icon-anchor  the point; holds the centering translate, never moves
+     .icon-grow    the envelope: scales 0→1 to grow IN from nothing and
+                   1→0 to shrink OUT — so the icon appears/disappears smoothly
+     .icon-mote    the dot + ring (an inline SVG, drawn in currentColor)
+   The dot is always shown while the icon is up; the ring is invisible until
+   it pings, so you never see a bare static ring — only the dot and the
+   periodic outward ping. */
+.icon-anchor {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  transform: translate(-50%, -50%);   /* sit centered on the icon point */
+}
+.icon-grow {
+  transform: scale(0);                /* hidden = nothing */
+  opacity: 0;
+  transition: transform 0.5s ease-in-out, opacity 0.4s ease-in-out;
+}
+.icon-anchor.beckon  .icon-grow,
+.icon-anchor.reveal  .icon-grow,
+.icon-anchor.shimmer .icon-grow,
+.icon-anchor.still   .icon-grow,
+.icon-anchor.lit     .icon-grow { transform: scale(1); opacity: 1; }
+
+.icon-mote {
+  width: var(--icon-size, 41px);      /* set from ICON_SIZE in config.js */
+  aspect-ratio: 1;
+  color: var(--glow);                 /* the ring-ping draws in currentColor */
+  filter:
+    drop-shadow(0 0 4px var(--glow))
+    drop-shadow(0 0 10px rgba(255, 200, 110, 0.7));
+  transform-origin: center;
+}
+.icon-mote svg { width: 100%; height: 100%; display: block; overflow: visible; }
+/* The ring is hidden until it pings — it fires small and flies outward,
+   fading. A FOR-YOU item pings on its own period, delayed by HALF so the ring
+   fires at the glow's dim trough and flies out as the glow swells to its peak
+   — moving WITH the glow. On HOVER, anything pings, so hover always looks the
+   same: just the animated ping. A "still" item never pings → just the dot. */
+.icon-mote .ping-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;                          /* invisible unless actively pinging */
+}
+.icon-anchor.beckon  .ping-ring { animation: icon-ping 2.6s ease-out infinite; animation-delay: -1.3s; }
+.icon-anchor.reveal  .ping-ring { animation: icon-ping 1.7s ease-out infinite; animation-delay: -0.85s; }
+.icon-anchor.shimmer .ping-ring { animation: icon-ping 3.0s ease-out infinite; animation-delay: -1.5s; }
+.icon-anchor.lit     .ping-ring { animation: icon-ping 2.4s ease-out infinite; animation-delay: 0s; }
+@keyframes icon-ping {
+  0%        { transform: scale(0.4); opacity: 0.9; }
+  80%, 100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* The object's name, shown on hover ABOVE the object itself (the anchor is
+   placed by JS at the top-center of the object's hitbox). */
+.obj-title {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  padding: 0.3rem 0.62rem;
+  white-space: nowrap;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--glow);
+  background: rgba(28, 20, 12, 0.92);
+  border: 1px solid rgba(184, 137, 59, 0.6);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.obj-title.lit { opacity: 1; transform: translate(-50%, calc(-100% - 4px)); }
 
 /* [6] ─── LOOK-AROUND BUTTON ──────────────────────────────────────────── */
 #look-around {
@@ -296,6 +392,13 @@ html, body {
 }
 #look-around.shown { opacity: 0.85; }
 #look-around:hover { opacity: 1; background: rgba(48, 34, 20, 0.8); transform: scale(1.06); }
+/* On = the gentle glow is showing on everything; the eye reads as active. */
+#look-around.is-on {
+  opacity: 1;
+  background: rgba(184, 137, 59, 0.92);
+  color: #2a1d0c;
+  border-color: var(--glow);
+}
 #look-around:focus-visible { outline: 2px dashed var(--glow); outline-offset: 3px; }
 
 /* The directory button sits just left of the eye, same treatment. */
@@ -492,6 +595,14 @@ html, body {
   border-color: var(--brass);
   background: rgba(255, 250, 235, 0.9);
   transform: translateX(2px);
+}
+/* The chosen option stays highlighted; the menu stays live so it can be
+   changed. */
+.option-list button.selected {
+  border-color: var(--brass);
+  background: rgba(255, 244, 214, 0.95);
+  color: var(--ink);
+  font-weight: 500;
 }
 
 .footnote {
@@ -746,6 +857,7 @@ body.editing #viewport.inside { overflow: auto; }
    this — the browser mis-places the declared hotspot when it scales the
    image on HiDPI displays — so we let the system draw the cursor. */
 body.editing #room { cursor: crosshair; }
+body.editing.picking-icon #room { cursor: cell; }
 
 #editor-svg {
   position: absolute;
@@ -761,6 +873,10 @@ body.editing #room { cursor: crosshair; }
 #editor-svg .existing { fill: rgba(255, 217, 138, 0.06); stroke: rgba(255, 217, 138, 0.5); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
 #editor-svg .current  { fill: rgba(167, 60, 52, 0.07);  stroke: var(--hibiscus); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
 #editor-svg .pt       { fill: var(--hibiscus); stroke: #fff; stroke-width: 0.5; vector-effect: non-scaling-stroke; }
+/* Icon points: existing ones in faint gold, the one being placed in bright
+   cyan so it stands out from the gold outlines and red trace points. */
+#editor-svg .existing-icon { fill: rgba(255, 217, 138, 0.35); stroke: rgba(255, 217, 138, 0.7); stroke-width: 0.7; vector-effect: non-scaling-stroke; }
+#editor-svg .current-icon  { fill: #36e0ff; stroke: #fff; stroke-width: 0.8; vector-effect: non-scaling-stroke; }
 
 #editor-panel {
   position: fixed;
@@ -829,9 +945,20 @@ body.editing #room { cursor: crosshair; }
   #door-zoom { transition: none; }
   #door-leaf.swing { animation: door-fade-only 0.5s ease forwards; }
   #room.stepping { transition: none; }
-  .glow-wrap.beckon { animation: none; opacity: 0.7; }
-  .glow-wrap.reveal { animation: none; }
-  .glow-wrap.shimmer { animation: none; opacity: 0.5; }
+  .glow-breath { animation: none !important; }
+  .glow-wrap.beckon  .glow-breath { opacity: 0.7; }
+  .glow-wrap.reveal  .glow-breath { opacity: 0.7; }
+  .glow-wrap.shimmer .glow-breath { opacity: 0.5; }
+  /* The mote holds a steady size — no breath, no scaling. It fades in and out
+     via the grow envelope's opacity only. */
+  .icon-mote { animation: none !important; }
+  /* No ping; show a steady ring on for-you / hovered items, none on "still". */
+  .icon-mote .ping-ring { animation: none !important; transform: none !important; }
+  .icon-anchor.beckon  .ping-ring,
+  .icon-anchor.reveal  .ping-ring,
+  .icon-anchor.shimmer .ping-ring,
+  .icon-anchor.lit     .ping-ring { opacity: 0.6; }
+  .icon-grow { transform: none !important; transition: opacity 0.3s ease; }
   .card { animation: none; }
 }
 @keyframes door-fade-only {
