@@ -488,6 +488,7 @@
   welcomeDone.addEventListener("click", function () {
     closeModal(welcomeBackdrop);
     settleAfterWelcome();
+    panToCenter();
   });
 
   /* Fill the "why AI" card from config (WHY_AI) — same source as the rest
@@ -805,7 +806,11 @@
 
   function closeModal(backdrop) {
     backdrop.hidden = true;
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    /* preventScroll: the focus target is a room hitbox, which can sit
+       off past the visible edge (e.g. the guest chair once the pan hint
+       has drifted). Without this, focusing it yanks the room's scroll
+       natively, fighting whatever pan is about to run (e.g. panToCenter). */
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
   }
 
   /* Click outside a card closes it (and still settles the welcome
@@ -859,35 +864,81 @@
       (room.offsetHeight - viewport.clientHeight) / 2;
   }
 
-  /* How far left of center the room is first revealed, giving the settle
-     somewhere to glide from. Capped so it stays a hint, never a lurch. */
-  function driftDelta() {
-    var overflow = (room.offsetWidth - viewport.clientWidth) / 2;
-    return Math.min(room.offsetWidth * 0.05, Math.max(overflow, 0));
+  /* Where the pan hint glides TO: centered on the guest chair, clamped so
+     it never scrolls past 14% into the photo from the left (leaving a
+     little breathing room at the edge, rather than pressing right up
+     against it) and never past true center, in case the chair's icon
+     ever moves right of it. */
+  function driftTarget() {
+    var center = (room.offsetWidth - viewport.clientWidth) / 2;
+    var minScroll = room.offsetWidth * 0.14;
+    var chair = ROOM_OBJECTS.filter(function (o) {
+      return o.id === "guest-chair";
+    })[0];
+    if (!chair || !chair.icon) return center;
+    var chairScroll = (chair.icon[0] / 100) * room.offsetWidth
+                       - viewport.clientWidth / 2;
+    return Math.min(center, Math.max(minScroll, chairScroll));
   }
 
-  /* The pan hint: the room is revealed slightly left of center (set while
-     it's still hidden behind the door, so there's no snap), and this glides
-     it the rest of the way to center — one continuous motion that quietly
-     says "this view moves". Animates FROM the current position; it never
-     teleports first, which is what used to cause a jolt at the end of the
-     step-in. */
-  function driftToCenter() {
-    var to = (room.offsetWidth - viewport.clientWidth) / 2;   /* true center */
+  /* Glide the room horizontally to a target scrollLeft — an ease-in-out
+     that's gentle at both ends. Shared by the chair-hunting pan hint and
+     the pan-back-to-center after the welcome menu. Reduced motion snaps
+     straight there instead of animating; already-close targets are a
+     no-op, so callers can invoke this freely without checking first. */
+  function panTo(target, duration) {
     var from = viewport.scrollLeft;
-    if (reducedMotion || Math.abs(to - from) < 8) { centerScroll(0); return; }
+    if (Math.abs(target - from) < 8) return;
+    if (reducedMotion) { viewport.scrollLeft = target; return; }
     var start = null;
     function step(ts) {
       if (!start) start = ts;
-      var t = Math.min((ts - start) / 2400, 1);   /* slow, unhurried glide */
-      /* ease-in-out cubic: eases in AND out, gentle at both ends */
+      var t = Math.min((ts - start) / duration, 1);
       var eased = t < 0.5
         ? 4 * t * t * t
         : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      viewport.scrollLeft = from + (to - from) * eased;
+      viewport.scrollLeft = from + (target - from) * eased;
       if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
+  }
+
+  /* The pan hint: the room is first revealed at true center (set while it's
+     still hidden behind the door, so there's no snap), and this glides it
+     from the middle toward the left, settling on the guest chair — one
+     continuous motion that quietly says "this view moves". Animates FROM
+     the current position; it never teleports first, which is what used to
+     cause a jolt at the end of the step-in. */
+  function driftToChair() {
+    panTo(driftTarget(), 3200);   /* slow, unhurried glide */
+  }
+
+  /* Where the room settles after the welcome menu closes: centered between
+     the leftmost and rightmost objects that are "for you" — the same
+     relevance isRelevant() uses to decide what shimmers, so a visitor who
+     picked "accompaniment" (only the couch) gets carried all the way to
+     the couch, not just partway there. One relevant object centers on
+     itself; a wanderer (nothing tagged for them) falls back to true
+     center. Clamped to the room's actual scrollable range — same rule as
+     any other pan, we simply can't scroll past either edge. */
+  function objectsSpanTarget() {
+    var choice = visitorChoice();
+    var xs = ROOM_OBJECTS
+      .filter(function (o) { return o.icon && isRelevant(o, choice); })
+      .map(function (o) { return o.icon[0]; });
+    var center = (room.offsetWidth - viewport.clientWidth) / 2;
+    if (!xs.length) return center;
+    var midPercent = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+    var target = (midPercent / 100) * room.offsetWidth - viewport.clientWidth / 2;
+    var max = room.offsetWidth - viewport.clientWidth;
+    return Math.min(max, Math.max(0, target));
+  }
+
+  /* After the welcome menu closes, glide there — the guest chair's job
+     (giving the visitor something to land on) is done, and this is the
+     neutral resting view for looking around the rest of the room. */
+  function panToCenter() {
+    panTo(objectsSpanTarget(), 2200);
   }
 
   /* Drag-to-pan with the mouse — horizontal only; the vertical axis stays
@@ -899,12 +950,45 @@
     dragging = true;
     sx = e.clientX;
     sl = viewport.scrollLeft;
+    fadePanHints();
   });
   window.addEventListener("mousemove", function (e) {
     if (!dragging) return;
     viewport.scrollLeft = sl - (e.clientX - sx);
   });
   window.addEventListener("mouseup", function () { dragging = false; });
+
+  /* Touch panning is native (the viewport just scrolls), so there's no drag
+     handler to hook — but the pan hint still needs to fade once the visitor
+     has found it. */
+  viewport.addEventListener("touchstart", function (e) {
+    if (e.target.closest(".hitbox") || e.target.closest(".card")) return;
+    fadePanHints();
+  }, { passive: true });
+
+  /* The pan hint arrows (narrow screens only, see css) — a nudge that fades
+     the moment the visitor pans for themselves, and independently hides
+     whichever side has nowhere further to pan (no point hinting at a dead
+     end). Runs on every scroll, whether from a drag, native touch scroll,
+     or one of our own panTo() animations — all of them fire real "scroll"
+     events since #viewport is a genuinely scrollable element. */
+  var panHintLeft = document.getElementById("pan-hint-left");
+  var panHintRight = document.getElementById("pan-hint-right");
+  var panHintsDismissed = false;
+
+  function updatePanHints() {
+    var max = room.offsetWidth - viewport.clientWidth;
+    panHintLeft.classList.toggle("pan-hint-faded",
+      panHintsDismissed || viewport.scrollLeft <= 1);
+    panHintRight.classList.toggle("pan-hint-faded",
+      panHintsDismissed || viewport.scrollLeft >= max - 1);
+  }
+  viewport.addEventListener("scroll", updatePanHints, { passive: true });
+
+  function fadePanHints() {
+    panHintsDismissed = true;
+    updatePanHints();
+  }
 
   /* [8] ─── THE DOOR ──────────────────────────────────────────────────
      Sequence:  idle (slow one-way push toward the door)
@@ -1016,11 +1100,9 @@
   /* The room waits behind the door already filling the screen (cover),
      centered. */
   function prepareRoomBehindDoor() {
-    /* Reveal the room a touch left of center. It's still hidden behind the
-       door when this runs, so the offset can't be seen as a jump; the
-       step-in holds it there and driftToCenter glides it home. */
-    var d = reducedMotion ? 0 : driftDelta();
-    centerScroll(d < 8 ? 0 : -d);
+    /* Reveal the room dead center — the step-in holds it there and
+       driftToChair glides it left from here, toward the guest chair. */
+    centerScroll(0);
     if (!reducedMotion)
       room.style.transform = "scale(" + (1 / enterZoom()) + ")";
   }
@@ -1041,7 +1123,7 @@
       room.removeEventListener("transitionend", handler);
       room.classList.remove("stepping");
       room.style.transform = "";
-      driftToCenter();
+      driftToChair();
       finishEntry();
     });
   }

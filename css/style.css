@@ -94,6 +94,52 @@ html, body {
   -webkit-user-drag: none;
 }
 
+/* Pan hint arrows — narrow screens only (dragging to pan isn't obvious on
+   a small screen). A bare glyph, not a button: no chip, no border, no
+   shadow that reads as chrome — just a soft breathing mark, like #door-hint's
+   "click to come in" text. Hidden until you're inside the room, and only
+   shown on phones/small tablets; on wider screens the drift-to-chair motion
+   is hint enough. Fades to nothing the moment the visitor pans for themselves. */
+.pan-hint {
+  display: none;
+  position: fixed;
+  top: 50%;
+  z-index: 40;
+  width: 3.4rem;
+  height: 3.4rem;
+  align-items: center;
+  transform: translateY(-50%);
+  color: rgba(243, 233, 214, 0.9);
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.85));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+/* A soft, edgeless glow behind the glyph for legibility against busy parts
+   of the photo — deliberately blurred with no border/shadow, so it reads
+   as a vignette, not a button chip. */
+.pan-hint::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(20, 14, 8, 0.45) 0%, transparent 72%);
+  filter: blur(2px);
+  z-index: -1;
+}
+.pan-hint-left { left: 0.2rem; justify-content: flex-start; padding-left: 0.5rem; }
+.pan-hint-right { right: 0.2rem; justify-content: flex-end; padding-right: 0.5rem; }
+/* The breathe animation only runs once inside — otherwise it'd override
+   the opacity: 0 above and the glyphs would flicker through the door. */
+#viewport.inside ~ .pan-hint { animation: hint-breathe 2.8s ease-in-out infinite; }
+.pan-hint.pan-hint-faded { animation: none; opacity: 0 !important; }
+
+@media (max-width: 700px) {
+  .pan-hint { display: flex; }
+}
+
+body.editing .pan-hint { display: none; }
+
 /* [4] ─── THE DOOR ─────────────────────────────────────────────────────
    Two layers inside #door-overlay:
 
@@ -190,11 +236,23 @@ html, body {
   pointer-events: none;
 }
 
-#door-hint {
+/* A dark haze behind the hint group so it reads clearly no matter what
+   part of the door photo sits behind it — a soft rise from the bottom,
+   not a hard-edged bar. */
+#door-hint-group {
   position: absolute;
   left: 0; right: 0;
-  bottom: 5svh;
+  bottom: 0;
+  padding: 10svh 1rem 4svh;
   text-align: center;
+  background: linear-gradient(to top, rgba(10, 7, 4, 0.6), rgba(10, 7, 4, 0) 100%);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#door-overlay.approaching #door-hint-group { opacity: 0; }
+
+#door-hint {
+  margin: 0;
   font-family: var(--font-utility);
   font-size: 0.78rem;
   letter-spacing: 0.22em;
@@ -202,10 +260,22 @@ html, body {
   color: rgba(243, 233, 214, 0.75);
   text-shadow: 0 1px 6px rgba(0,0,0,0.8);
   animation: hint-breathe 2.8s ease-in-out infinite;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
 }
-#door-overlay.approaching #door-hint { opacity: 0; }
+
+/* Recommend desktop only where it's actually true — the room's drag-to-pan
+   and hover-driven glow work best with a wide screen and a pointer. */
+#door-note {
+  display: none;
+  margin: 0.5em 0 0;
+  font-family: var(--font-utility);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: rgba(243, 233, 214, 0.55);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+}
+@media (max-width: 700px) {
+  #door-note { display: block; }
+}
 @keyframes hint-breathe {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.95; }
@@ -942,6 +1012,7 @@ body.editing.picking-icon #room { cursor: cell; }
   #site-wrapper { animation: none; }
   #door-pos.drifting { animation: none; }
   #door-hint { animation: none; opacity: 0.8; }
+  #viewport.inside ~ .pan-hint { animation: none; opacity: 0.8; }
   #door-zoom { transition: none; }
   #door-leaf.swing { animation: door-fade-only 0.5s ease forwards; }
   #room.stepping { transition: none; }

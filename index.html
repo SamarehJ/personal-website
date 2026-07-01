@@ -25,6 +25,24 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════
+     PAN HINT ARROWS — narrow screens only. Dragging to pan isn't obvious
+     on a small screen, so these chevrons hint it, then fade once the
+     visitor pans for themselves.
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="pan-hint-left" class="pan-hint pan-hint-left" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 5l-7 7 7 7"/>
+  </svg>
+</div>
+<div id="pan-hint-right" class="pan-hint pan-hint-right" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 5l7 7-7 7"/>
+  </svg>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
      LOOK-AROUND BUTTON — re-pulses every hotspot on demand.
      ════════════════════════════════════════════════════════════════════ -->
 <button id="look-around" hidden aria-label="Highlight everything you can look at" title="Highlight everything you can click">
@@ -74,7 +92,10 @@
     <div id="door-leaf-plate" aria-hidden="true">Samareh&nbsp;Jack</div>
   </div>
 
-  <p id="door-hint">click to come in</p>
+  <div id="door-hint-group">
+    <p id="door-hint">click to come in</p>
+    <p id="door-note">best experienced on a larger screen</p>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════

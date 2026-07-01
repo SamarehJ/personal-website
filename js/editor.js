@@ -130,7 +130,15 @@
 
   /* ── The generated config lines ─────────────────────────────────────── */
 
-  function round1(n) { return Math.round(n * 10) / 10; }
+  /* Decimal places for the copied coordinates. 2 ≈ 0.27px on the 2738px
+     image (sub-pixel, smooth on any display) and is plenty; bump to 3 only
+     if you trace pixel-tight detail at full zoom. 1 (the old value) snapped
+     to a ~2.7px grid, which collapsed close points and distorted edges. */
+  var COORD_DECIMALS = 2;
+  function round1(n) {
+    var f = Math.pow(10, COORD_DECIMALS);
+    return Math.round(n * f) / f;
+  }
 
   function snippet() {
     var xs = points.map(function (p) { return p[0]; });
