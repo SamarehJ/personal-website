@@ -400,6 +400,7 @@ const GUESTBOOK = {
     "them up myself, so yours should appear soon. Thanks again for " +
     "stopping by.",
   entries: [
+  
     { note: "Yay, Samareh! I'm so happy to learn about (and experience!) all of the beautiful ways you share your gifts with the world. Thank you for making your projects easily legible in this space and for continuing to be you. What an infinite blessing.",
       name: "Leah Fulmer", link: "", date: "4 July 2026" },
 
