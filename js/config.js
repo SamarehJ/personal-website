@@ -384,7 +384,9 @@ const CONTACT = {
    The book is curated: visitors send an entry, it reaches you via
    Formspree, and YOU add it here by hand — so nothing public is ever
    un-vetted. Add new entries to the TOP of `entries`.
-   Each entry: { note, name, link } — link is optional. */
+   Each entry: { note, name, link, date } — link and date are optional.
+   `date` is a free-form string shown after the name (e.g. "July 2026");
+   leave it "" to show no date. */
 const GUESTBOOK = {
   eyebrow: "Who's stopped by",
   title: "The guest book",
@@ -398,14 +400,17 @@ const GUESTBOOK = {
     "them up myself, so yours should appear soon. Thanks again for " +
     "stopping by.",
   entries: [
+    { note: "Yay, Samareh! I'm so happy to learn about (and experience!) all of the beautiful ways you share your gifts with the world. Thank you for making your projects easily legible in this space and for continuing to be you. What an infinite blessing.",
+      name: "Leah Fulmer", link: "", date: "4 July 2026" },
+
     { note: "It’s very organized. I like the decoration. Hope your job helps people. Good luck.",
-      name: "Shahla Imani", link: "" },
-  
+      name: "Shahla Imani", link: "", date: "1 July 2026" },
+
     { note: "I always like the idea of creating something new with AI - like this website. I've heard good things about it. Good luck!",
-      name: "Abeo Jack (7 years old)", link: "" },
-      
+      name: "Abeo Jack (7 years old)", link: "", date: "20 June 2026" },
+
     { note: "I love you. Welcome to website and also I want to create with AI and also I like to draw on the computer and also I want to spin the whole house with one finger and also I really like to drink coconut water and also I really want to put some bit of blob of computer and then flush it down the toilet.",
-      name: "Zia Jack (4 years old)", link: "" }
+      name: "Zia Jack (4 years old)", link: "", date: "20 June 2026" }
   ]
 };
 

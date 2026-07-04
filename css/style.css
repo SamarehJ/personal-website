@@ -789,6 +789,7 @@ body.editing .pan-hint { display: none; }
 }
 .gb-by a { color: var(--hibiscus); text-decoration: none; }
 .gb-by a:hover { text-decoration: underline; }
+.gb-date { color: var(--brass); opacity: 0.75; }
 .gb-empty {
   margin: 0;
   padding: var(--rule) 0;

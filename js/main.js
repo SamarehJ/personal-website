@@ -662,6 +662,12 @@
       } else {
         by.textContent = "— " + name;
       }
+      if (entry.date) {
+        var date = document.createElement("span");
+        date.className = "gb-date";
+        date.textContent = " · " + entry.date;
+        by.appendChild(date);
+      }
       wrap.appendChild(by);
       guestbookEntries.appendChild(wrap);
     });
