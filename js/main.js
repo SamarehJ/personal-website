@@ -51,6 +51,7 @@
 
   var welcomeBackdrop = document.getElementById("welcome-backdrop");
   var welcomeTitle = document.getElementById("welcome-title");
+  var welcomeIntro = document.getElementById("welcome-intro");
   var welcomeOptions = document.getElementById("welcome-options");
   var welcomeResponse = document.getElementById("welcome-response");
   var welcomeActions = document.getElementById("welcome-actions");
@@ -435,7 +436,9 @@
 
   function openWelcome() {
     lastFocus = document.activeElement;
-    welcomeTitle.textContent = "Welcome. What brings you by?";
+    welcomeTitle.textContent = WELCOME_INTRO.title;
+    welcomeIntro.textContent = WELCOME_INTRO.intro;
+    welcomeIntro.hidden = false;
     welcomeResponse.hidden = true;
     welcomeActions.hidden = true;
     welcomeOptions.hidden = false;
@@ -460,7 +463,8 @@
       b.classList.toggle("selected", isSel);
       b.setAttribute("aria-pressed", isSel ? "true" : "false");
     });
-    welcomeTitle.textContent = "Glad you're here.";
+    welcomeTitle.textContent = WELCOME_INTRO.answered;
+    welcomeIntro.hidden = true;
     welcomeResponse.textContent = opt.response;
     welcomeResponse.hidden = false;
     welcomeActions.hidden = false;
@@ -754,46 +758,72 @@
     return el;
   }
 
+  /* Which category heading an object lives under: the first category whose
+     `id` is one of the object's tags, else the last (catch-all) category —
+     that's where the untagged room-keeping items (about, contact, guest
+     book, the tea) land. */
+  function objCategory(obj) {
+    var cats = DIRECTORY.categories || [];
+    for (var i = 0; i < cats.length; i++) {
+      if (obj.tags && obj.tags.indexOf(cats[i].id) !== -1) return cats[i].id;
+    }
+    return cats.length ? cats[cats.length - 1].id : null;
+  }
+
+  function buildRow(obj) {
+    var row = document.createElement("div");
+    row.className = "dir-row";
+    var name = document.createElement("span");
+    name.className = "dir-name";
+    name.textContent =
+      obj.about ? "About me" :
+      obj.contact ? "Contact" :
+      obj.guestbook ? "Guest book" :
+      (obj.title || obj.label);
+    row.appendChild(name);
+
+    if (obj.links && obj.links.length) {
+      obj.links.forEach(function (link) {
+        if (!link.url) return;
+        if (link.embed) {
+          row.appendChild(makeDirLink(link.label, "→", function () {
+            openWrapper(link.url, obj.title || obj.label);
+          }));
+        } else {
+          row.appendChild(makeDirLink(link.label, "↗", null, link.url));
+        }
+      });
+    } else if (obj.about) {
+      row.appendChild(makeDirLink(ABOUT.readMore || "Read about me", "→",
+        function () { openAbout(obj); }));
+    } else if (obj.contact) {
+      row.appendChild(makeDirLink("Get in touch", "→",
+        function () { openContact(obj); }));
+    } else if (obj.guestbook) {
+      row.appendChild(makeDirLink(GUESTBOOK.signLabel || "Sign the guest book", "→",
+        function () { openGuestbook(obj); }));
+    }
+    return row;
+  }
+
   function renderDirectory() {
     directoryEyebrow.textContent = DIRECTORY.eyebrow;
     directoryTitle.textContent = DIRECTORY.title;
     directoryIntro.textContent = DIRECTORY.intro;
     directoryList.innerHTML = "";
 
-    directoryObjects().forEach(function (obj) {
-      var row = document.createElement("div");
-      row.className = "dir-row";
-      var name = document.createElement("span");
-      name.className = "dir-name";
-      name.textContent =
-        obj.about ? "About me" :
-        obj.contact ? "Contact" :
-        obj.guestbook ? "Guest book" :
-        (obj.title || obj.label);
-      row.appendChild(name);
-
-      if (obj.links && obj.links.length) {
-        obj.links.forEach(function (link) {
-          if (!link.url) return;
-          if (link.embed) {
-            row.appendChild(makeDirLink(link.label, "→", function () {
-              openWrapper(link.url, obj.title || obj.label);
-            }));
-          } else {
-            row.appendChild(makeDirLink(link.label, "↗", null, link.url));
-          }
-        });
-      } else if (obj.about) {
-        row.appendChild(makeDirLink(ABOUT.readMore || "Read about me", "→",
-          function () { openAbout(obj); }));
-      } else if (obj.contact) {
-        row.appendChild(makeDirLink("Get in touch", "→",
-          function () { openContact(obj); }));
-      } else if (obj.guestbook) {
-        row.appendChild(makeDirLink(GUESTBOOK.signLabel || "Sign the guest book", "→",
-          function () { openGuestbook(obj); }));
-      }
-      directoryList.appendChild(row);
+    /* Objects stay in their `order` sort within each group. Walk the
+       categories in config order and emit a heading only for the non-empty
+       ones, so an empty category (e.g. Creative, for now) simply vanishes. */
+    var objs = directoryObjects();
+    (DIRECTORY.categories || []).forEach(function (cat) {
+      var inCat = objs.filter(function (o) { return objCategory(o) === cat.id; });
+      if (!inCat.length) return;
+      var heading = document.createElement("h3");
+      heading.className = "dir-cat";
+      heading.textContent = cat.label;
+      directoryList.appendChild(heading);
+      inCat.forEach(function (obj) { directoryList.appendChild(buildRow(obj)); });
     });
   }
   renderDirectory();

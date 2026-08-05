@@ -500,6 +500,16 @@ body.editing .pan-hint { display: none; }
    opened from it layer on top, and closing them returns here. */
 #directory-backdrop { z-index: 58; }
 #directory-list { margin-bottom: 0.6rem; }
+.dir-cat {
+  margin: 1.5rem 0 0.15rem;
+  font-family: var(--font-utility);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.dir-cat:first-child { margin-top: 0; }
 .dir-row {
   display: flex;
   flex-wrap: wrap;
@@ -508,7 +518,8 @@ body.editing .pan-hint { display: none; }
   padding: 0.7rem 0;
   border-top: 1px solid var(--parchment-edge);
 }
-.dir-row:first-child { border-top: 0; }
+.dir-row:first-child,
+.dir-cat + .dir-row { border-top: 0; }
 .dir-name {
   flex: 1 1 140px;
   font-family: var(--font-display);
