@@ -223,11 +223,13 @@ outline: [
     label: "The hibiscus tea",
     title: "Buy me a tea",
     flavor:
-      "Hibiscus — my favorite. If what I'm building here means something " +
-      "to you, you can put the kettle on for the next cup.",
+      "Hibiscus — my favorite. I'm a mother of two boys I homeschool, and I " +
+      "make things I hope will improve people's lives or bring them joy. " +
+      "If something in this room has done that for you, you can put the " +
+      "kettle on for the next cup.",
     image: "assets/previews/tea.jpg",
     links: [
-      { label: "Support me",
+      { label: "Put the kettle on",
         url: "https://buymeacoffee.com/samarehjack" }   
     ],
     tags: [],
